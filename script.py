@@ -25,14 +25,15 @@ def get_disc(target):
             elif 'Departamento' in t:
                 dsc = t.split('Departamento')[0]
                 dsc = dsc.split(' ',1)[-1]
-            type = t.split('DISCIPLINA')[1].strip()
+            type = t.split(' DISCIPLINA')[1].strip()
             type = type.split(' ')[0]
-            curriculum.append([cod, dsc, type])
+            credits = t.split(" DISCIPLINA")[0][-1].strip()
+            curriculum.append([cod, dsc, type, credits])
     return curriculum            
 
 link_cc = "https://cobalto.ufpel.edu.br/portal/cadastros/curriculoPublico/visualizar/100" 
 link_ec = "https://cobalto.ufpel.edu.br/portal/cadastros/curriculoPublico/visualizar/138"
-cols = ['código','cadeira','tipo']
+cols = ['código','cadeira','tipo','créditos']
 
 try:
     driver = webdriver.Edge(EdgeChromiumDriverManager().install())
