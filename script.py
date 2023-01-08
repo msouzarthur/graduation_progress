@@ -76,6 +76,7 @@ class NavigationFrame(customtkinter.CTkFrame):
         self.home_image_small       = customtkinter.CTkImage(Image.open(os.path.join(image_path, "home.png")), size=(20, 20))
         self.profile_image_small    = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "profile.png")), size=(20, 20))
         self.book_image_small       = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "books.png")), size=(20, 20))
+        self.settings_image_small   = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "settings.png")), size=(20, 20))
         
         super().__init__(*args, **kwargs)
         
@@ -83,20 +84,54 @@ class NavigationFrame(customtkinter.CTkFrame):
 
         self.navigation_frame = customtkinter.CTkFrame(self, corner_radius=0)
         
-        self.home_btn = customtkinter.CTkButton(self, corner_radius=0, height=40, border_spacing=20, text="MENU",
+        self.home_btn = customtkinter.CTkButton(self, corner_radius=0, height=40, border_spacing=10, text="MENU",
                                                 fg_color="transparent", text_color=("gray10", "gray90"), 
                                                 hover_color=("gray70", "gray30"), image=self.home_image_small, anchor="w")
-        self.home_btn.pack()
+        self.home_btn.pack(pady=8)
         
-        self.profile_btn = customtkinter.CTkButton(self, corner_radius=0, height=40, border_spacing=20, text="ALUNO",
+        self.profile_btn = customtkinter.CTkButton(self, corner_radius=0, height=40, border_spacing=10, text="ALUNO",
                                                       fg_color="transparent", text_color=("gray10", "gray90"), 
                                                       hover_color=("gray70", "gray30"), anchor="w", image=self.profile_image_small)
-        self.profile_btn.pack()
+        self.profile_btn.pack(pady=8)
         
-        self.course_btn = customtkinter.CTkButton(self, corner_radius=0, height=40, border_spacing=20, text="CURSO",
+        self.course_btn = customtkinter.CTkButton(self, corner_radius=0, height=40, border_spacing=10, text="CURSO",
                                                       fg_color="transparent", text_color=("gray10", "gray90"), 
                                                       hover_color=("gray70", "gray30"), anchor="w", image=self.book_image_small)
-        self.course_btn.pack()
+        self.course_btn.pack(pady=8)
+
+        self.settings_btn = customtkinter.CTkButton(self, corner_radius=0, height=40, border_spacing=10, text="ESTATÍSTICAS",
+                                                      fg_color="transparent", text_color=("gray10", "gray90"), 
+                                                      hover_color=("gray70", "gray30"), anchor="w", image=self.settings_image_small)
+        self.settings_btn.pack(pady=8)
+
+class StudentFrame(customtkinter.CTkFrame):
+
+    def __init__(self, *args, header_name="PROFILE", **kwargs):
+        image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), r"img")
+        self.profile_image          = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "profile.png")), size=(128, 128))
+        self.refresh_image          = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "refresh.png")), size=(20, 20))
+        self.download_image         = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "download.png")), size=(20, 20))
+
+        super().__init__(*args, **kwargs)
+        
+        self.header_name = header_name
+
+        if studentName == 'CARREGUE SEU HISTÓRICO':
+            msg_1 = "CARREGAR HISTÓRICO"
+            btn_student_image = self.download_image
+        else:
+            msg_1 = "ATUALIZAR HISTÓRICO"
+            btn_student_image = self.refresh_image
+
+        self.label_student_img = customtkinter.CTkLabel(self, text="", image=self.profile_image)
+        self.label_student_img.pack(padx=20, pady=60)
+        
+        self.label_student_name = customtkinter.CTkLabel(self, text=studentName)
+        self.label_student_name.pack(padx=20, pady=10)
+        
+        self.button_student = customtkinter.CTkButton(self, text=msg_1, compound='left', image=btn_student_image)
+        self.button_student.pack(padx=20, pady=10)
+
 
 class App(customtkinter.CTk):
 
@@ -156,7 +191,18 @@ class App(customtkinter.CTk):
             self.home_frame.grid(row=0, column=1, sticky="nsew")
         else:
             self.home_frame.grid_forget()
-    
+        # if name == "profile":
+        #     self.second_frame.grid(row=0, column=1, sticky="nsew")
+        # else:
+        #     self.second_frame.grid_forget()
+        # if name == "course":
+        #     self.second_frame.grid(row=0, column=1, sticky="nsew")
+        # else:
+        #     self.second_frame.grid_forget()
+        # if name == "statics":
+        #     self.second_frame.grid(row=0, column=1, sticky="nsew")
+        # else:
+        #     self.second_frame.grid_forget()
 
 
 def load_courses():
@@ -209,7 +255,8 @@ def extract_id(target):
 
 def extract_name(target):
     name = target.split("Nome: ")[1]
-    return name.split(" ")[0].strip()
+    name = name.split("Curso: ")[0]
+    return name.strip()
 
 def extract_disciplines(target):
     disciplines = []
