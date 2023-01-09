@@ -12,7 +12,39 @@ columns = ['CODIGO','CADEIRA','STATUS','MEDIA']
 
 class CourseFrame(customtkinter.CTkFrame):
 
+    def __init__(self, *args, header_name="COURSE", **kwargs):   
+
+        image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), r"img")
+        self.book_image             = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "books.png")), size=(128, 128))
+        self.refresh_image          = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "refresh.png")), size=(20, 20))
+        self.download_image         = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "download.png")), size=(20, 20))
+
+        super().__init__(*args, **kwargs)
+            
+        self.header_name = header_name
+
+        if graduationId == 0:
+            msg_2 = "CARREGAR GRADE CURRICULAR"
+            course = "SELECIONE O CURSO"
+            btn_course_image = self.download_image
+        else:
+            msg_2 = "ATUALIZAR GRADE CURRICULAR"
+            course = coursesDict.get(graduationId)
+            btn_course_image = self.refresh_image
+
+        self.label_course_img = customtkinter.CTkLabel(self, text="", image=self.book_image)
+        self.label_course_img.pack(padx=20, pady=60)
+        
+        self.label_course_name = customtkinter.CTkLabel(self, text=course)
+        self.label_course_name.pack(padx=20, pady=10)
+        
+        self.button_course = customtkinter.CTkButton(self, text=msg_2,  compound="left", image=btn_course_image)
+        self.button_course.pack(padx=20, pady=10)
+
+class GraduationFrame(customtkinter.CTkFrame):
+
     def __init__(self, *args, header_name="COURSE", **kwargs):    
+
         image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), r"img")
         self.book_image             = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "books.png")), size=(128, 128))
         self.refresh_image          = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "refresh.png")), size=(20, 20))
@@ -43,6 +75,7 @@ class CourseFrame(customtkinter.CTkFrame):
 class LoginFrame(customtkinter.CTkFrame):
 
     def __init__(self, *args, header_name="LOGIN", **kwargs):
+        
         image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), r"img")
         self.profile_image          = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "profile.png")), size=(128, 128))
         self.refresh_image          = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "refresh.png")), size=(20, 20))
@@ -94,10 +127,10 @@ class NavigationFrame(customtkinter.CTkFrame):
                                                       hover_color=("gray70", "gray30"), anchor="w", image=self.profile_image_small)
         self.profile_btn.pack(pady=8)
         
-        self.course_btn = customtkinter.CTkButton(self, corner_radius=0, height=40, border_spacing=10, text="CURSO",
+        self.graduation_btn = customtkinter.CTkButton(self, corner_radius=0, height=40, border_spacing=10, text="CURSO",
                                                       fg_color="transparent", text_color=("gray10", "gray90"), 
                                                       hover_color=("gray70", "gray30"), anchor="w", image=self.book_image_small)
-        self.course_btn.pack(pady=8)
+        self.graduation_btn.pack(pady=8)
 
         self.settings_btn = customtkinter.CTkButton(self, corner_radius=0, height=40, border_spacing=10, text="ESTATÍSTICAS",
                                                       fg_color="transparent", text_color=("gray10", "gray90"), 
@@ -107,6 +140,7 @@ class NavigationFrame(customtkinter.CTkFrame):
 class StudentFrame(customtkinter.CTkFrame):
 
     def __init__(self, *args, header_name="PROFILE", **kwargs):
+
         image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), r"img")
         self.profile_image          = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "profile.png")), size=(128, 128))
         self.refresh_image          = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "refresh.png")), size=(20, 20))
@@ -132,6 +166,52 @@ class StudentFrame(customtkinter.CTkFrame):
         self.button_student = customtkinter.CTkButton(self, text=msg_1, compound='left', image=btn_student_image)
         self.button_student.pack(padx=20, pady=10)
 
+class HomeFrame(customtkinter.CTkFrame):
+
+    def __init__(self, *args, header_name="HOME", **kwargs):
+
+        image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), r"img")
+        self.home_image_small       = customtkinter.CTkImage(Image.open(os.path.join(image_path, "home.png")), size=(20, 20))
+        self.profile_image          = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "profile.png")), size=(128, 128))
+        self.profile_image_small    = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "profile.png")), size=(20, 20))
+        self.book_image             = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "books.png")), size=(128, 128))
+        self.book_image_small       = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "books.png")), size=(20, 20))
+        self.refresh_image          = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "refresh.png")), size=(20, 20))
+        self.download_image         = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "download.png")), size=(20, 20))
+
+        super().__init__(*args, **kwargs)
+        
+        # configure grid layout      
+        Grid.columnconfigure(self, (0,1,2,3,4),weight=1)
+        Grid.rowconfigure(self, (0,1), weight=1)
+        
+        # create login frame
+        self.login_frame = LoginFrame(self, header_name="USUÁRIO")
+        self.login_frame.grid(row=0, column=1, padx=(30,0), pady=(30,0))
+
+        # create course frame
+        self.course_frame = CourseFrame(self, header_name="CURSO")
+        self.course_frame.grid(row=0, column=3, padx=(0,30), pady=(30,0))
+        
+        # create button 
+        self.home_frame_button = customtkinter.CTkButton(self, text="CONTINUAR")
+        self.home_frame_button.grid(row=1, column=2, padx=0, pady=30, sticky="W")
+        
+class StatisticsFrame(customtkinter.CTkFrame):
+
+    def __init__(self, *args, header_name="HOME", **kwargs):
+
+        image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), r"img")
+        self.home_image_small       = customtkinter.CTkImage(Image.open(os.path.join(image_path, "home.png")), size=(20, 20))
+        self.profile_image          = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "profile.png")), size=(128, 128))
+        self.profile_image_small    = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "profile.png")), size=(20, 20))
+        self.book_image             = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "books.png")), size=(128, 128))
+        self.book_image_small       = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "books.png")), size=(20, 20))
+        self.refresh_image          = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "refresh.png")), size=(20, 20))
+        self.download_image         = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "download.png")), size=(20, 20))
+
+        super().__init__(*args, **kwargs)
+        
 
 class App(customtkinter.CTk):
 
@@ -143,66 +223,82 @@ class App(customtkinter.CTk):
         self.geometry("1000x600")
 
         # configure grid layout      
-        Grid.columnconfigure(self, (0,1,2,3,4),weight=1)
+        Grid.columnconfigure(self, (0,1,2),weight=1)
         Grid.rowconfigure(self, (0,1), weight=1)
-
-        image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), r"img")
-        self.home_image_small       = customtkinter.CTkImage(Image.open(os.path.join(image_path, "home.png")), size=(20, 20))
-        self.profile_image          = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "profile.png")), size=(128, 128))
-        self.profile_image_small    = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "profile.png")), size=(20, 20))
-        self.book_image             = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "books.png")), size=(128, 128))
-        self.book_image_small       = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "books.png")), size=(20, 20))
-        self.refresh_image          = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "refresh.png")), size=(20, 20))
-        self.download_image         = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "download.png")), size=(20, 20))
-
+        
         # create home frame
-        self.home_frame = customtkinter.CTkFrame(self, corner_radius=0, fg_color="transparent")
- 
+        self.home_frame = HomeFrame(self, header_name="HOME")
+        self.home_frame.home_frame_button.configure(command=self.statistics_button_event)
+        self.home_frame.login_frame.button_student.configure(command=self.student_button_event)
+        self.home_frame.course_frame.button_course.configure(command=self.graduation_button_event)
+        self.home_frame.grid(pady=30)
+
         # create navigation frame
         self.navigation_frame = NavigationFrame(self, header_name="SIDEMENU")
         self.navigation_frame.grid(row=0, column=0, sticky="NSW", rowspan=2)
+        self.navigation_frame.home_btn.configure(command=self.home_button_event)
+        self.navigation_frame.profile_btn.configure(command=self.student_button_event)
+        self.navigation_frame.graduation_btn.configure(command=self.graduation_button_event)
+        self.navigation_frame.settings_btn.configure(command=self.statistics_button_event)
 
-        # create login frame
-        self.login_frame = LoginFrame(self, header_name="USUÁRIO")
-        self.login_frame.grid(row=0, column=1, padx=0, pady=0)
+        # create statistic frame
+        self.statistics_frame = StatisticsFrame(self, corner_radius=0, fg_color="transparent")
+        self.statistics_frame.grid(pady=30)
 
-        # create course frame
-        self.login_frame = CourseFrame(self, header_name="CURSO")
-        self.login_frame.grid(row=0, column=3, padx=0, pady=0)
-        
-        # create button 
-        self.home_frame_button = customtkinter.CTkButton(self, text="CONTINUAR")
-        self.home_frame_button.grid(row=1, column=2, padx=0, pady=0, sticky="W")
-        
-        #  create statics frame
-        
+        # create student frame
+        self.student_frame = StudentFrame(self, corner_radius=0, fg_color="transparent")
+        self.student_frame.grid(pady=30)
+
+        # create graduation frame
+        self.graduation_frame = CourseFrame(self, corner_radius=0, fg_color="transparent")
+        self.graduation_frame.grid(pady=30)
         # select default frame
         self.select_frame_by_name("home")
 
     def select_frame_by_name(self, name):
 
+        self.navigation_frame.home_btn.configure(fg_color=("gray75", "gray25") if name == "home" else "transparent")
+        self.navigation_frame.profile_btn.configure(fg_color=("gray75", "gray25") if name == "student" else "transparent")
+        self.navigation_frame.graduation_btn.configure(fg_color=("gray75", "gray25") if name == "graduation" else "transparent")
+        self.navigation_frame.settings_btn.configure(fg_color=("gray75", "gray25") if name == "statistics" else "transparent")
+
         if studentName == 'CARREGUE SEU HISTÓRICO':
-            self.home_frame_button.configure(fg_color="transparent", text="CARREGUE SEU HISTÓRICO")
+            self.home_frame.home_frame_button.configure(fg_color="transparent", text="CARREGUE SEU HISTÓRICO")
         if graduationId == 0:
-            self.home_frame_button.configure(fg_color="transparent", text="SELECIONE SEU CURSO")
+            self.home_frame.home_frame_button.configure(fg_color="transparent", text="SELECIONE SEU CURSO")
 
         # show selected frame
         if name == "home":
-            self.home_frame.grid(row=0, column=1, sticky="nsew")
+            self.home_frame.grid(row=0, column=1, sticky="nsew", pady=30)
         else:
             self.home_frame.grid_forget()
-        # if name == "profile":
-        #     self.second_frame.grid(row=0, column=1, sticky="nsew")
-        # else:
-        #     self.second_frame.grid_forget()
-        # if name == "course":
-        #     self.second_frame.grid(row=0, column=1, sticky="nsew")
-        # else:
-        #     self.second_frame.grid_forget()
-        # if name == "statics":
-        #     self.second_frame.grid(row=0, column=1, sticky="nsew")
-        # else:
-        #     self.second_frame.grid_forget()
+        if name == "student":
+            self.student_frame.configure(fg_color=("gray75", "gray25"))
+            self.student_frame.grid(row=0, column=1, sticky="nsew", pady=30)
+        else:
+            self.student_frame.grid_forget()
+        if name == "graduation":
+            self.graduation_frame.configure(fg_color=("gray75", "gray25"))
+            self.graduation_frame.grid(row=0, column=1, sticky="nsew", pady=30)
+        else:
+            self.graduation_frame.grid_forget()
+        if name == "statistics":
+            self.statistics_frame.configure(fg_color=("gray75", "gray25"))
+            self.statistics_frame.grid(row=0, column=1, sticky="nsew", pady=30)
+        else:
+            self.statistics_frame.grid_forget()
+        
+    def home_button_event(self):
+        self.select_frame_by_name("home")
+
+    def student_button_event(self):
+        self.select_frame_by_name("student")
+
+    def graduation_button_event(self):
+        self.select_frame_by_name("graduation")
+    
+    def statistics_button_event(self):
+        self.select_frame_by_name("statistics")
 
 
 def load_courses():
@@ -213,11 +309,11 @@ def load_courses():
         with open(file_path, 'r') as f:
             reader = csv.reader(f)
             coursesDict = dict((rows[0],rows[1]) for rows in reader)
-        # print(u"\u2713")  charmap error
+        print(u"\u2713") #charmap error
         return coursesDict
     except:
         pass
-        # print(u"\u2717") charmap error
+        print(u"\u2717") #charmap error
 
 def optionmenu_callback(choice):
     print("clicked:", choice)
@@ -254,6 +350,7 @@ def extract_id(target):
     return cod.split(" ")[0].strip()
 
 def extract_name(target):
+    # Nome: Matrícula: Aluno: Curso: Ano/semestre:
     name = target.split("Nome: ")[1]
     name = name.split("Curso: ")[0]
     return name.strip()
@@ -301,11 +398,11 @@ def load_student_file():
         studentName = extract_name(studentHist)
         graduationId = extract_id(studentHist)
         studentHist = extract_disciplines(studentHist)
-        # print(u"\u2713") charmap error
+        print(u"\u2713") #charmap error
         return studentHist
     except:
         pass
-        # print(u"\u2717") charmap error
+        print(u"\u2717") #charmap error
     
 if __name__=='__main__':
 
