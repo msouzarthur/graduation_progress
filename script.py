@@ -23,13 +23,13 @@ class CourseFrame(customtkinter.CTkFrame):
             
         self.header_name = header_name
 
-        if graduationId == 0:
+        if studentDict == None:
             msg_2 = "CARREGAR GRADE CURRICULAR"
             course = "SELECIONE O CURSO"
             btn_course_image = self.download_image
         else:
             msg_2 = "ATUALIZAR GRADE CURRICULAR"
-            course = coursesDict.get(graduationId)
+            course = coursesDict.get(studentDict.get("ID Curso"))
             btn_course_image = self.refresh_image
 
         self.label_course_img = customtkinter.CTkLabel(self, text="", image=self.book_image)
@@ -54,13 +54,13 @@ class GraduationFrame(customtkinter.CTkFrame):
             
         self.header_name = header_name
 
-        if graduationId == 0:
+        if studentDict == None:
             msg_2 = "CARREGAR GRADE CURRICULAR"
             course = "SELECIONE O CURSO"
             btn_course_image = self.download_image
         else:
             msg_2 = "ATUALIZAR GRADE CURRICULAR"
-            course = coursesDict.get(graduationId)
+            course = coursesDict.get(studentDict.get("ID Curso"))
             btn_course_image = self.refresh_image
 
         self.label_course_img = customtkinter.CTkLabel(self, text="", image=self.book_image)
@@ -85,7 +85,7 @@ class LoginFrame(customtkinter.CTkFrame):
         
         self.header_name = header_name
 
-        if studentName == 'CARREGUE SEU HISTÓRICO':
+        if studentDict == None:
             msg_1 = "CARREGAR HISTÓRICO"
             btn_student_image = self.download_image
         else:
@@ -95,7 +95,7 @@ class LoginFrame(customtkinter.CTkFrame):
         self.label_student_img = customtkinter.CTkLabel(self, text="", image=self.profile_image)
         self.label_student_img.pack(padx=20, pady=60)
         
-        self.label_student_name = customtkinter.CTkLabel(self, text=studentName)
+        self.label_student_name = customtkinter.CTkLabel(self, text=studentDict.get("Nome"))
         self.label_student_name.pack(padx=20, pady=10)
         
         self.button_student = customtkinter.CTkButton(self, text=msg_1, compound='left', image=btn_student_image)
@@ -150,7 +150,7 @@ class StudentFrame(customtkinter.CTkFrame):
         
         self.header_name = header_name
 
-        if studentName == 'CARREGUE SEU HISTÓRICO':
+        if studentDict == None:
             msg_1 = "CARREGAR HISTÓRICO"
             btn_student_image = self.download_image
         else:
@@ -160,7 +160,7 @@ class StudentFrame(customtkinter.CTkFrame):
         self.label_student_img = customtkinter.CTkLabel(self, text="", image=self.profile_image)
         self.label_student_img.pack(padx=20, pady=60)
         
-        self.label_student_name = customtkinter.CTkLabel(self, text=studentName)
+        self.label_student_name = customtkinter.CTkLabel(self, text=studentDict.get("Nome"))
         self.label_student_name.pack(padx=20, pady=10)
         
         self.button_student = customtkinter.CTkButton(self, text=msg_1, compound='left', image=btn_student_image)
@@ -262,9 +262,8 @@ class App(customtkinter.CTk):
         self.navigation_frame.graduation_btn.configure(fg_color=("gray75", "gray25") if name == "graduation" else "transparent")
         self.navigation_frame.settings_btn.configure(fg_color=("gray75", "gray25") if name == "statistics" else "transparent")
 
-        if studentName == 'CARREGUE SEU HISTÓRICO':
+        if studentDict == None:
             self.home_frame.home_frame_button.configure(fg_color="transparent", text="CARREGUE SEU HISTÓRICO")
-        if graduationId == 0:
             self.home_frame.home_frame_button.configure(fg_color="transparent", text="SELECIONE SEU CURSO")
 
         # show selected frame
@@ -300,7 +299,6 @@ class App(customtkinter.CTk):
     def statistics_button_event(self):
         self.select_frame_by_name("statistics")
 
-
 def load_courses():
     # courses dictionary
     print("carregando cursos", end=' ')
@@ -319,42 +317,12 @@ def optionmenu_callback(choice):
     print("clicked:", choice)
     print("code:", coursesDict[choice])
 
-def extract_curriculum(target):
-    curriculum = []
-    target = target.split("\n")
-    for t in target:
-        if 'Semestre' in t or 'Total: ' in t or 'COMPLEMENTARES' in t:
-            pass
-        elif len(t.split(' '))>=5:
-            cod = t.split(' ')[0]
-            if 'Centro' in t:
-                dsc = t.split('Centro')[0]
-                dsc = dsc.split(' ',1)[-1]
-            elif 'Departamento' in t:
-                dsc = t.split('Departamento')[0]
-                dsc = dsc.split(' ',1)[-1]
-            type = t.split(' DISCIPLINA')[1].strip()
-            type = type.split(' ')[0]
-            credits = t.split(" DISCIPLINA")[0][-1].strip()
-            curriculum.append([cod, dsc, type, credits])
-    return curriculum    
-
 def extract_content(target):
     content = []
     for page in target.pages:
         content.append(page.extract_text())
     return '\n'.join([str(page) for page in content])
     
-def extract_id(target):
-    cod = target.split("Curso: ")[1]
-    return cod.split(" ")[0].strip()
-
-def extract_name(target):
-    # Nome: Matrícula: Aluno: Curso: Ano/semestre:
-    name = target.split("Nome: ")[1]
-    name = name.split("Curso: ")[0]
-    return name.strip()
-
 def extract_disciplines(target):
     disciplines = []
     target = target.split('\n')
@@ -389,14 +357,11 @@ def extract_disciplines(target):
     return disciplines
 
 def load_student_file():
-    global studentName, graduationId
     studentFile = os.path.join(os.path.dirname(os.path.realpath(__file__)), r"docs/historico_aluno.pdf")
     print('carregando historico do aluno', end=' ')    
     try:
         reader = PdfReader(studentFile)
         studentHist = extract_content(reader)
-        studentName = extract_name(studentHist)
-        graduationId = extract_id(studentHist)
         studentHist = extract_disciplines(studentHist)
         print(u"\u2713") #charmap error
         return studentHist
@@ -404,12 +369,41 @@ def load_student_file():
         pass
         print(u"\u2717") #charmap error
     
+def extract_target(target, file, delimiter="\n"):
+    try:
+        data = file.split(target)[1]
+        data = data.split(delimiter)[0]
+        return data.strip()
+    except:
+        print("erro ao extrair conteudo")
+        print("revise os parametros")
+        pass
+    
+def extract_dict():
+    file = os.path.join(os.path.dirname(os.path.realpath(__file__)), r"docs/historico_aluno.pdf")
+    print('carregando dados do aluno', end=' ')    
+    try:
+        target = PdfReader(file)
+        target = extract_content(target)
+        studentDict = {
+            'Nome':extract_target("Nome:", target),
+            'Matrícula':extract_target("Matrícula:", target, " N"),
+            'Curso':extract_target("Curso:",target," ("),
+            'ID Curso':extract_target("Curso:",target," -"),
+            'Vínculo':extract_target("Situação do Aluno:",target,"Ór"),
+            'Ingresso':extract_target("Ano/semestre:",target,"Pro")
+        }
+        print(u"\u2713") #charmap error
+        return studentDict
+    except:
+        pass
+        print(u"\u2717") #charmap error
+
+
 if __name__=='__main__':
 
-    studentName = 'CARREGUE SEU HISTÓRICO'
-    graduationId = 0
-
-    studentFile = load_student_file() 
+    studentDict = extract_dict()
+    studentHist = load_student_file() 
     coursesDict = load_courses()
 
     app = App()
