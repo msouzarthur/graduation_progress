@@ -26,7 +26,7 @@ class CourseFrame(customtkinter.CTkFrame):
         self.label_course_img.pack(padx=20, pady=60)
         
         self.label_course_name = customtkinter.CTkLabel(self, 
-                                                        text="SELECIONE O CURSO")
+                                                        text=studentDict.get("Curso"))
         self.label_course_name.pack(padx=20, pady=10)
         
         self.button_course = customtkinter.CTkButton(self, 
@@ -61,7 +61,7 @@ class GraduationFrame(customtkinter.CTkFrame):
         combo_default = customtkinter.StringVar(value=coursesDict.get(studentDict.get("ID Curso")))  
         self.combobox = customtkinter.CTkComboBox(self.top_frame_label,
                                             values=coursesDict.values(),
-                                            command=self.combobox_callback,
+                                            # command=self.combobox_callback,
                                             variable=combo_default)
         self.combobox.pack(padx=(0,80), pady=(40,0), anchor="w")
         self.combobox.configure(width=200)
@@ -83,11 +83,11 @@ class GraduationFrame(customtkinter.CTkFrame):
         textbox.pack(pady=(0,20))
 
         index = 0.0
-        for discipline in curriculumDict:
-            textbox.insert(index,discipline + " - " + curriculumDict.get(discipline) + "\n")  
+        for discipline in curriculumList:
+            textbox.insert(index,discipline[0] + " - " + discipline[-1] + " - " + discipline[1] +"\n")  
             index+=1
         
-        textbox.configure(state="disabled",width=500)  
+        textbox.configure(state="disabled",width=505)  
     
         self.label_warning = customtkinter.CTkLabel(self.body_frame_label, 
                                                     text="ATENÇÃO: A grade curricular pode estar desatualizada.\nEntre em contato com o desenvolvedor para atualizá-la")
@@ -276,6 +276,7 @@ class StatisticsFrame(customtkinter.CTkFrame):
         self.download_image         = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "download.png")), size=(20, 20))
 
         super().__init__(*args, **kwargs)
+
         
 class App(customtkinter.CTk):
 
@@ -392,13 +393,21 @@ def load_curriculum(course_id , file_path = os.path.join(os.path.dirname(os.path
             if len(content[-1]) < 9:
                 content.pop(-1)
 
-            curriculumDict = {}
+            curriculumList = []
             for x in content:
-                if len(x.split(" ")[0]) < 8:
-                    x = x.replace(" ","",1)
-                curriculumDict.update({x.split(" ",1)[0].strip() : x.split(" ",1)[1].strip()})
+                if "ATIVIDADE" not in x:
+                    if len(x.split(" ")[0]) < 8:
+                        x = x.replace(" ","",1)
+                    code = x.split(" ", 1)[0].strip()
+                    discipline = x.split("DISCIPLINA")
+                    discipline = discipline[0].split(" ",1)[1].strip()
+                    structure = x.split("DISCIPLINA",1)[1].strip()
+                    structure = structure.replace(" ","")
+                    curriculumList.append(
+                        [code,discipline,structure]
+                    )
 
-            return curriculumDict
+            return curriculumList
         except:
             print("<error> erro ao ler arquivo")
     else:
@@ -495,7 +504,7 @@ if __name__=='__main__':
     coursesDict = load_courses()
 
     if logged:
-        curriculumDict = load_curriculum(studentDict.get("ID Curso"))
+        curriculumList = load_curriculum(studentDict.get("ID Curso"))
 
     app = App()
     app.mainloop()
