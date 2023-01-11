@@ -2,7 +2,7 @@
 
 import csv, os, shutil, customtkinter
 import pandas as pd
-from tkinter import *
+import tkinter
 from tkinter import filedialog as fd
 from pypdf import PdfReader
 from PIL import Image
@@ -26,7 +26,7 @@ class CourseFrame(customtkinter.CTkFrame):
         self.label_course_img.pack(padx=20, pady=60)
         
         self.label_course_name = customtkinter.CTkLabel(self, 
-                                                        text=coursesDict.get(studentDict.get("ID Curso")) if logged else "SELECIONE O CURSO")
+                                                        text="SELECIONE O CURSO")
         self.label_course_name.pack(padx=20, pady=10)
         
         self.button_course = customtkinter.CTkButton(self, 
@@ -49,28 +49,62 @@ class GraduationFrame(customtkinter.CTkFrame):
         self.header_name = header_name
 
         self.top_frame_label = customtkinter.CTkFrame(self)
-        # self.top_frame_label.configure(fg_color="transparent")
+        self.top_frame_label.configure(fg_color="transparent")
         self.top_frame_label.pack()
         
         self.label_course_img = customtkinter.CTkLabel(self.top_frame_label, text="", image=self.book_image)
-        self.label_course_img.pack(padx=20, pady=60, side="left")
+        self.label_course_img.pack(padx=(80,20), pady=40, side="left")
         
-        self.label_course_name = customtkinter.CTkLabel(self.top_frame_label, text="Curso"+"\t"+studentDict.get("Curso") if logged else "")
-        self.label_course_name.pack(padx=(0,80), pady=(0,40), anchor="w")
+        # self.label_course_name = customtkinter.CTkLabel(self.top_frame_label, text="Curso")
+        # self.label_course_name.pack(padx=(0,80), pady=(40,0), anchor="w")
 
+        combo_default = customtkinter.StringVar(value=coursesDict.get(studentDict.get("ID Curso")))  
+        self.combobox = customtkinter.CTkComboBox(self.top_frame_label,
+                                            values=coursesDict.values(),
+                                            command=self.combobox_callback,
+                                            variable=combo_default)
+        self.combobox.pack(padx=(0,80), pady=(40,0), anchor="w")
+        self.combobox.configure(width=200)
+        
         self.label_course_id = customtkinter.CTkLabel(self.top_frame_label, text="ID"+"\t"+studentDict.get("ID Curso") if logged else "")
         self.label_course_id.pack(padx=(0,80), pady=(0,40), anchor="w")
 
+
+        self.body_frame_label = customtkinter.CTkFrame(self)
+        self.body_frame_label.configure(fg_color="transparent")
+        self.body_frame_label.pack()
+
+        self.label_subtitle = customtkinter.CTkLabel(self.body_frame_label, 
+                                                    text="Grade curricular")
+        self.label_subtitle.pack(pady=(10,0))
+
         # create scrollable textbox
-        # tk_textbox = customtkinter.CTkTextbox(self)
-        # tk_textbox.pack()
+        textbox = customtkinter.CTkTextbox(self.body_frame_label)
+        textbox.pack(pady=(0,20))
 
+        index = 0.0
+        for discipline in curriculumDict:
+            textbox.insert(index,discipline + " - " + curriculumDict.get(discipline) + "\n")  
+            index+=1
+        
+        textbox.configure(state="disabled",width=500)  
+    
+        self.label_warning = customtkinter.CTkLabel(self.body_frame_label, 
+                                                    text="ATENÇÃO: A grade curricular pode estar desatualizada.\nEntre em contato com o desenvolvedor para atualizá-la")
+        self.label_warning.pack(pady=20)
 
-        # self.button_course = customtkinter.CTkButton(self, 
-        #                                           text="ATUALIZAR GRADE CURRICULAR" if logged else "CARREGAR GRADE CURRICULAR"
-        #                                           compound="left",
-        #                                           image=refresh_image if logged else download_image)
-        # self.button_course.pack(padx=20, pady=10)
+        self.bottom_frame_label = customtkinter.CTkFrame(self)
+        self.bottom_frame_label.configure(fg_color="transparent")
+        self.bottom_frame_label.pack()
+
+        self.button_course = customtkinter.CTkButton(self.bottom_frame_label, 
+                                                  text="ATUALIZAR GRADE CURRICULAR" if logged else "CARREGAR GRADE CURRICULAR",
+                                                  compound="left",
+                                                  image=self.refresh_image if logged else self.download_image)
+        self.button_course.pack(padx=20, pady=10)
+
+    def combobox_callback(choice):
+            print("combobox dropdown clicked:", choice)
 
 class LoginFrame(customtkinter.CTkFrame):
 
@@ -176,10 +210,10 @@ class StudentFrame(customtkinter.CTkFrame):
                     self.label_value.pack(padx=80, pady=(0,10), anchor="w")
             
         self.button_student = customtkinter.CTkButton(self, 
-        text="ATUALIZAR HISTÓRICO" if logged else "SELECIONAR ARQUIVO", 
-        compound='left', 
-        image=self.refresh_image if logged else self.download_image, 
-        command=self.select_pdf_file)
+                                                    text="ATUALIZAR HISTÓRICO" if logged else "SELECIONAR ARQUIVO", 
+                                                    compound='left', 
+                                                    image=self.refresh_image if logged else self.download_image, 
+                                                    command=self.select_pdf_file)
         self.button_student.pack(padx=20, pady=(90,0), anchor="s")
     
     def select_pdf_file(self):
@@ -213,8 +247,8 @@ class HomeFrame(customtkinter.CTkFrame):
         super().__init__(*args, **kwargs)
         
         # configure grid layout      
-        Grid.columnconfigure(self, (0,1,2,3,4),weight=1)
-        Grid.rowconfigure(self, (0,1), weight=1)
+        tkinter.Grid.columnconfigure(self, (0,1,2,3,4),weight=1)
+        tkinter.Grid.rowconfigure(self, (0,1), weight=1)
         
         # create login frame
         self.login_frame = LoginFrame(self, header_name="USUÁRIO")
@@ -243,7 +277,6 @@ class StatisticsFrame(customtkinter.CTkFrame):
 
         super().__init__(*args, **kwargs)
         
-
 class App(customtkinter.CTk):
 
     def __init__(self):
@@ -254,8 +287,8 @@ class App(customtkinter.CTk):
         self.geometry("1000x600")
 
         # configure grid layout      
-        Grid.columnconfigure(self, (0,1,2),weight=1)
-        Grid.rowconfigure(self, (0,1), weight=1)
+        tkinter.Grid.columnconfigure(self, (0,1,2),weight=1)
+        tkinter.Grid.rowconfigure(self, (0,1), weight=1)
         
         # create home frame
         self.home_frame = HomeFrame(self, header_name="HOME")
@@ -283,6 +316,7 @@ class App(customtkinter.CTk):
         # create graduation frame
         self.graduation_frame = GraduationFrame(self, fg_color="transparent")
         self.graduation_frame.grid(pady=30)
+        
         # select default frame
         self.select_frame_by_name("home")
 
@@ -342,10 +376,35 @@ def load_courses(file_path = os.path.join(os.path.dirname(os.path.realpath(__fil
         pass
         print("<error> erro ao carregar cursos")
 
-def optionmenu_callback(choice):
-    print("clicked:", choice)
-    print("code:", coursesDict[choice])
+def load_curriculum(course_id , file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), r"docs/")):
+    print("carregando grade curricular do curso")
 
+    file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), r"docs/"+course_id+".pdf")
+
+    if os.path.exists(file_path):
+        try:        
+            reader = PdfReader(file_path)
+            content = extract_content(reader)
+            content = content.split("\n")
+            content = [x.strip() for x in content]
+            
+            # remove trash
+            if len(content[-1]) < 9:
+                content.pop(-1)
+
+            curriculumDict = {}
+            for x in content:
+                if len(x.split(" ")[0]) < 8:
+                    x = x.replace(" ","",1)
+                curriculumDict.update({x.split(" ",1)[0].strip() : x.split(" ",1)[1].strip()})
+
+            return curriculumDict
+        except:
+            print("<error> erro ao ler arquivo")
+    else:
+        print("<error> erro ao localizar arquivo")
+        print("<error> curso nao suportado")
+        
 def extract_content(target):
     content = []
     for page in target.pages:
@@ -385,10 +444,10 @@ def extract_disciplines(target):
             disciplines.append([cod,cad,status,med])
     return disciplines
 
-def load_student_file(studentFile = os.path.join(os.path.dirname(os.path.realpath(__file__)), r"docs/historico_aluno.pdf")):
+def load_student_file(file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), r"docs/historico_aluno.pdf")):
     print('carregando historico do aluno')    
     try:
-        reader = PdfReader(studentFile)
+        reader = PdfReader(file_path)
         studentHist = extract_content(reader)
         studentHist = extract_disciplines(studentHist)
         return studentHist
@@ -406,12 +465,12 @@ def extract_target(target, file, delimiter="\n"):
         print("<error> erro ao extrair conteudo")
         print("<error> revise os parametros")
         pass
-    
-def extract_dict(file = os.path.join(os.path.dirname(os.path.realpath(__file__)), r"docs/historico_aluno.pdf")):
+
+def extract_dict(file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), r"docs/historico_aluno.pdf")):
     global logged
     print('carregando dados do aluno')    
     try:
-        target = PdfReader(file)
+        target = PdfReader(file_path)
         target = extract_content(target)
         studentDict = {
             'Nome':extract_target("Nome:", target),
@@ -434,6 +493,9 @@ if __name__=='__main__':
     studentDict = extract_dict()
     studentHist = load_student_file() 
     coursesDict = load_courses()
+
+    if logged:
+        curriculumDict = load_curriculum(studentDict.get("ID Curso"))
 
     app = App()
     app.mainloop()
