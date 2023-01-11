@@ -276,6 +276,43 @@ class StatisticsFrame(customtkinter.CTkFrame):
         self.download_image         = customtkinter.CTkImage(dark_image=Image.open(os.path.join(image_path, "download.png")), size=(20, 20))
 
         super().__init__(*args, **kwargs)
+    
+        self.header_name = header_name
+
+        # create first frame 
+        self.top_frame_indicators = customtkinter.CTkFrame(self)
+        self.top_frame_indicators.pack()
+
+
+
+        # create second frame
+        self.top_frame_graphics = customtkinter.CTkFrame(self)
+        self.top_frame_graphics.pack()
+
+        # create third frame
+        self.body_frame = customtkinter.CTkFrame(self)
+        self.body_frame.pack()
+        
+        textbox = customtkinter.CTkTextbox(self.body_frame)
+        textbox.pack(pady=(0,20))
+
+        index = 0.0
+        for discipline in studentHist:
+            textbox.insert(index,discipline[0] + " - " + discipline[1] + " - "+ discipline[2] + " - " + discipline[-1] +"\n")  
+            index+=1
+        
+        textbox.configure(state="disabled",width=505)  
+
+        '''
+        -----------------------------------------------------
+        | maior nota       menor nota                media  |
+        | g.quantidade     g.obriga                  g.opta |
+        |
+        | tabela de notas
+        | cod cadeira nota
+        |
+        -----------------------------------------------------
+        '''
 
         
 class App(customtkinter.CTk):
@@ -430,7 +467,8 @@ def extract_disciplines(target):
             med = disc.split(" ")[-2].strip()
             if med == 'MAT':
                 med = ''
-                
+                cad = disc.split(" MAT")[0].strip()
+                status = "MAT"
             if 'APR' in disc:
                 cad = disc.split(" APR")[0].strip()
                 status = 'APR'
@@ -451,6 +489,7 @@ def extract_disciplines(target):
                 status = 'INF'
             cad = cad.split('- ')[-1].strip()
             disciplines.append([cod,cad,status,med])
+    
     return disciplines
 
 def load_student_file(file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), r"docs/historico_aluno.pdf")):
@@ -502,6 +541,7 @@ if __name__=='__main__':
     studentDict = extract_dict()
     studentHist = load_student_file() 
     coursesDict = load_courses()
+    print(studentHist)
 
     if logged:
         curriculumList = load_curriculum(studentDict.get("ID Curso"))
