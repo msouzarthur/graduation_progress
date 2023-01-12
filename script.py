@@ -4,8 +4,11 @@ import csv, os, shutil, customtkinter
 import pandas as pd
 import tkinter
 from tkinter import filedialog as fd
+from tkinter import ttk
 from pypdf import PdfReader
 from PIL import Image
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
 columns = ['CODIGO','CADEIRA','STATUS','MEDIA']
 
@@ -48,39 +51,49 @@ class GraduationFrame(customtkinter.CTkFrame):
             
         self.header_name = header_name
 
+        # create top frame
         self.top_frame_label = customtkinter.CTkFrame(self)
         self.top_frame_label.configure(fg_color="transparent")
-        self.top_frame_label.pack()
+        self.top_frame_label.pack(pady=35)
         
-        self.label_course_img = customtkinter.CTkLabel(self.top_frame_label, text="", image=self.book_image)
-        self.label_course_img.pack(padx=(80,20), pady=40, side="left")
+        self.top_frame_label_left = customtkinter.CTkFrame(self.top_frame_label)
+        self.top_frame_label_left.configure(fg_color="transparent")
+        self.top_frame_label_left.pack(padx=30, side="left")
+
+        self.top_frame_label_right = customtkinter.CTkFrame(self.top_frame_label)
+        self.top_frame_label_right.configure(fg_color="transparent")
+        self.top_frame_label_right.pack(padx=30, side="right")
+
+        self.label_course_img = customtkinter.CTkLabel(self.top_frame_label_left, text="", image=self.book_image)
+        self.label_course_img.pack()
         
-        # self.label_course_name = customtkinter.CTkLabel(self.top_frame_label, text="Curso")
-        # self.label_course_name.pack(padx=(0,80), pady=(40,0), anchor="w")
-
-        combo_default = customtkinter.StringVar(value=coursesDict.get(studentDict.get("ID Curso")))  
-        self.combobox = customtkinter.CTkComboBox(self.top_frame_label,
-                                            values=coursesDict.values(),
-                                            # command=self.combobox_callback,
-                                            variable=combo_default)
-        self.combobox.pack(padx=(0,80), pady=(40,0), anchor="w")
-        self.combobox.configure(width=200)
+        self.label_course_name = customtkinter.CTkLabel(self.top_frame_label_right, text=studentDict.get("Curso"))
+        self.label_course_name.pack()
         
-        self.label_course_id = customtkinter.CTkLabel(self.top_frame_label, text="ID"+"\t"+studentDict.get("ID Curso") if logged else "")
-        self.label_course_id.pack(padx=(0,80), pady=(0,40), anchor="w")
-
-
+        # create body frame
         self.body_frame_label = customtkinter.CTkFrame(self)
         self.body_frame_label.configure(fg_color="transparent")
         self.body_frame_label.pack()
-
-        self.label_subtitle = customtkinter.CTkLabel(self.body_frame_label, 
-                                                    text="Grade curricular")
-        self.label_subtitle.pack(pady=(10,0))
+        
+        combo_default = customtkinter.StringVar(value=coursesDict.get(studentDict.get("ID Curso")))  
+        self.combobox = customtkinter.CTkComboBox(self.body_frame_label,
+                                            values=coursesDict.values(),
+                                            # command=self.combobox_callback,
+                                            variable=combo_default)
+        self.combobox.pack(pady=0, anchor="w", side="left", fill=tkinter.BOTH, expand=True)
+        self.combobox.configure(width=300)
+        
+        self.refresh_button = customtkinter.CTkButton(self.body_frame_label, text="", image=self.refresh_image, anchor="w")
+        self.refresh_button.configure(width=25)
+        self.refresh_button.pack(padx=5, pady=0, side="right")
+        
+        self.table_frame = customtkinter.CTkFrame(self)
+        self.table_frame.configure(fg_color="transparent")
+        self.table_frame.pack(pady=(5,20))
 
         # create scrollable textbox
-        textbox = customtkinter.CTkTextbox(self.body_frame_label)
-        textbox.pack(pady=(0,20))
+        textbox = customtkinter.CTkTextbox(self.table_frame)
+        textbox.pack()
 
         index = 0.0
         for discipline in curriculumList:
@@ -88,20 +101,21 @@ class GraduationFrame(customtkinter.CTkFrame):
             index+=1
         
         textbox.configure(state="disabled",width=505)  
-    
-        self.label_warning = customtkinter.CTkLabel(self.body_frame_label, 
-                                                    text="ATENÇÃO: A grade curricular pode estar desatualizada.\nEntre em contato com o desenvolvedor para atualizá-la")
-        self.label_warning.pack(pady=20)
-
+        
         self.bottom_frame_label = customtkinter.CTkFrame(self)
         self.bottom_frame_label.configure(fg_color="transparent")
         self.bottom_frame_label.pack()
 
+        self.label_warning = customtkinter.CTkLabel(self.bottom_frame_label, 
+                                                    text="ATENÇÃO: A grade curricular pode estar desatualizada.\nEntre em contato com o desenvolvedor para atualizá-la")
+        self.label_warning.pack()
+
+       
         self.button_course = customtkinter.CTkButton(self.bottom_frame_label, 
                                                   text="ATUALIZAR GRADE CURRICULAR" if logged else "CARREGAR GRADE CURRICULAR",
                                                   compound="left",
                                                   image=self.refresh_image if logged else self.download_image)
-        self.button_course.pack(padx=20, pady=10)
+        self.button_course.pack(padx=20)
 
     def combobox_callback(choice):
             print("combobox dropdown clicked:", choice)
@@ -181,35 +195,55 @@ class StudentFrame(customtkinter.CTkFrame):
         
         self.header_name = header_name
 
-        self.top_frame_label = customtkinter.CTkFrame(self)
-        self.top_frame_label.configure(fg_color="transparent")
-        self.top_frame_label.pack()
+        self.top_frame = customtkinter.CTkFrame(self)
+        self.top_frame.configure(fg_color="transparent")
+        self.top_frame.pack(padx=30, ipadx=0, pady=(30,0))
+
+        self.top_frame_left = customtkinter.CTkFrame(self.top_frame)
+        self.top_frame_left.configure(fg_color="transparent")
+        self.top_frame_left.pack(side="left",fill="x")
+
+        self.top_frame_top = customtkinter.CTkFrame(self.top_frame)
+        self.top_frame_top.configure(fg_color="transparent")
+        self.top_frame_top.pack(fill="x")
+
+        self.top_frame_bottom = customtkinter.CTkFrame(self.top_frame)
+        self.top_frame_bottom.configure(fg_color="transparent")
+        self.top_frame_bottom.pack(fill="x")
+
+        self.body_frame = customtkinter.CTkFrame(self)
+        self.body_frame.configure(fg_color="transparent")
+        self.body_frame.pack(padx=60, pady=(40,0), fill="x")
     
-        self.label_student_img = customtkinter.CTkLabel(self.top_frame_label, 
+        self.student_img = customtkinter.CTkLabel(self.top_frame_left, 
                                                         text="", 
                                                         image=self.profile_image)
-        self.label_student_img.pack(padx=(80,20), pady=40, side="left")
+        self.student_img.configure(fg_color="transparent")
+        self.student_img.pack(padx=20, fill="x")
+            
+        self.student_name = customtkinter.CTkLabel(self.top_frame_top, text=studentDict.get("Nome") if logged else "SEM DADOS")
+        self.student_name.configure(fg_color="transparent")
+        self.student_name.pack(padx=15, fill="x", anchor="e")
+            
+        self.student_status = customtkinter.CTkLabel(self.top_frame_bottom, text=studentDict.get("Curso") if logged else "SEM DADOS")
+        self.student_status.configure(fg_color="transparent")
+        self.student_status.pack(padx=15, fill="x", anchor="e")
         
-        self.student_name = customtkinter.CTkLabel(self.top_frame_label, 
-                                                    text="Matrícula\t\t" + studentDict.get("Matrícula") if logged else "SEM DADOS")
-        self.student_name.pack(padx=(0,80), pady=(40,0), anchor="w")
-
-        self.student_status = customtkinter.CTkLabel(self.top_frame_label, text="Vínculo\t" + studentDict.get("Vínculo") if logged else "SEM DADOS")
-        self.student_status.pack(padx=(0,80), pady=(0,40), anchor="w")
-
-        self.frame_label = customtkinter.CTkFrame(self)
-        self.frame_label.configure(fg_color="transparent")
-        self.frame_label.pack()
-
+        
         if logged:
             for data in studentDict:
-                if data == "ID Curso" or data == "Vínculo" or data == "Matrícula": 
+                if data == "ID Curso" or data == "Nome": 
                     pass
                 else:
-                    self.label_value = customtkinter.CTkLabel(self.frame_label, text=data+"\t"+studentDict.get(data))
-                    self.label_value.pack(padx=80, pady=(0,10), anchor="w")
+                    self.data_frame = customtkinter.CTkFrame(self.body_frame)
+                    self.data_frame.configure(fg_color="transparent")
+                    self.data_frame.pack(fill="x")
+                    self.label_content = customtkinter.CTkLabel(self.data_frame, text=str.upper(data))
+                    self.label_content.pack(padx=(150,0), pady=15, side="left", anchor="e")
+                    self.label_value = customtkinter.CTkLabel(self.data_frame, text=studentDict.get(data))
+                    self.label_value.pack(padx=(0,150), pady=15, side="right", anchor="w")
             
-        self.button_student = customtkinter.CTkButton(self, 
+        self.button_student = customtkinter.CTkButton(self.body_frame, 
                                                     text="ATUALIZAR HISTÓRICO" if logged else "SELECIONAR ARQUIVO", 
                                                     compound='left', 
                                                     image=self.refresh_image if logged else self.download_image, 
@@ -262,9 +296,72 @@ class HomeFrame(customtkinter.CTkFrame):
         self.home_frame_button = customtkinter.CTkButton(self, text="CONTINUAR")
         self.home_frame_button.grid(row=1, column=2, padx=0, pady=30, sticky="W")
         
+class GradeTable(customtkinter.CTkFrame):
+    
+    def __init__(self, *args, header_name="TABLE", **kwargs):
+        
+        super().__init__(*args, **kwargs)
+                
+        self.body_frame = customtkinter.CTkFrame(self)
+        self.body_frame.configure(fg_color="transparent")
+        self.body_frame.grid()
+
+        tree = ttk.Treeview(self, columns=("code","class","status","grade"), show='headings')
+
+        tree.heading('code', text='CÓDIGO')
+        tree.heading('class', text='CADEIRA')
+        tree.heading('status', text='STATUS')
+        tree.heading('grade', text='NOTA')
+
+        for i in range(len(studentHist)):
+            tree.insert('',tkinter.END, values=studentHist[i])
+
+        tree.grid(row=0, column=0, sticky='nsew')
+
+        # create CTk scrollbar
+        scrollbar = customtkinter.CTkScrollbar(self, command=tree.yview)
+        scrollbar.grid(row=0, column=1, sticky="ns")
+        tree.configure(yscroll=scrollbar.set)
+        scrollbar.grid(row=0, column=1, sticky='ns')
+
+        style = ttk.Style()
+        style.theme_use("default")
+    
+        style.configure("Treeview",
+                        background="#404040",
+                        foreground="white",
+                        rowheight=25,
+                        fieldbackground="#343638",
+                        bordercolor="#343638",
+                        borderwidth=0)
+        style.map('Treeview', background=[('selected', '#22559b')])
+
+        style.configure("Treeview.Heading",
+                        background="#565b5e",
+                        foreground="white",
+                        relief="flat")
+        style.map("Treeview.Heading",
+                    background=[('active', '#3484F0')])
+        # style.configure("Treeview", 
+        #                 background="#3b3b3b",
+        #                 foreground="white",
+        #                 rowheight=25,
+        #                 fieldbackground="#343638",
+        #                 bordercolor="#343638",
+        #                 borderwidth=0,
+        #                 borderradius=10)
+        # style.configure('Treeview.Heading',
+        #                 background="#3b3b3b",
+        #                 bordercolor="#00000",
+        #                 fontcolor="white")
+        # style.map('Treeview', background=[('selected', '#404040')])
+
+    def set_content(self,content):
+        self.target = content
+
 class StatisticsFrame(customtkinter.CTkFrame):
 
-    def __init__(self, *args, header_name="HOME", **kwargs):
+    def __init__(self, *args, header_name="STATISTICS", **kwargs):
 
         image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), r"img")
         self.home_image_small       = customtkinter.CTkImage(Image.open(os.path.join(image_path, "home.png")), size=(20, 20))
@@ -281,28 +378,58 @@ class StatisticsFrame(customtkinter.CTkFrame):
 
         # create first frame 
         self.top_frame_indicators = customtkinter.CTkFrame(self)
-        self.top_frame_indicators.pack()
+        self.top_frame_indicators.configure(fg_color="transparent")
+        self.top_frame_indicators.pack(pady=35, fill="x")
+ 
+        higher_grade = max([float(disc[3].replace(",",".")) for disc in studentHist if disc[3]])
+        lower_grade = min([float(disc[3].replace(",",".")) for disc in studentHist if disc[3]])
+        mean_grade = round(sum([float(disc[3].replace(",",".")) for disc in studentHist if disc[3]])/len([float(disc[3].replace(",",".")) for disc in studentHist if disc[3]]),2)
+        count_higher = 0
+        count_lower = 0
+        IRA = sum(
+            [float(disc[4].replace(",","."))*float(disc[3].replace(",",".")) for disc in studentHist if disc[3]]
+        )/sum(
+            [float(disc[4].replace(",",".")) for disc in studentHist if disc[3]]
+        )
+        
+        for disc in studentHist:
+            if disc[3] and float(disc[3].replace(",",".")) == higher_grade:
+                count_higher+=1
+            if disc[3] and float(disc[3].replace(",",".")) == lower_grade:
+                count_lower+=1
 
+        self.higher_grade_label = customtkinter.CTkLabel(self.top_frame_indicators, text=str(higher_grade)+"\nMAIOR NOTA")
+        self.higher_grade_label.configure(fg_color="#144870", corner_radius=10, font=('arial',14))
+        self.higher_grade_label.pack(padx=20, ipadx=10, ipady=10, side="left", fill=tkinter.BOTH, expand=True)
 
+        self.lower_grade_label = customtkinter.CTkLabel(self.top_frame_indicators, text=str(lower_grade)+"\nMENOR NOTA")
+        self.lower_grade_label.configure(fg_color="#144870", corner_radius=10, font=('arial',14))
+        self.lower_grade_label.pack(padx=20, ipadx=10, ipady=10, side="left", fill=tkinter.BOTH, expand=True)
 
+        self.mean_grade_label = customtkinter.CTkLabel(self.top_frame_indicators, text=str(mean_grade)+"\nMÉDIA GERAL")
+        self.mean_grade_label.configure(fg_color="#144870", corner_radius=10, font=('arial',14))
+        self.mean_grade_label.pack(padx=20, ipadx=10, ipady=10, side="right", fill=tkinter.BOTH, expand=True)
+        
+        self.ira_label = customtkinter.CTkLabel(self.top_frame_indicators, text=str(round(IRA,2))+"\nIRA")
+        self.ira_label.configure(fg_color="#144870", corner_radius=10, font=('arial',14))
+        self.ira_label.pack(padx=20, ipadx=10, ipady=10, side="right", fill=tkinter.BOTH, expand=True)
+        
         # create second frame
         self.top_frame_graphics = customtkinter.CTkFrame(self)
         self.top_frame_graphics.pack()
-
+        
+        self.graph_label = customtkinter.CTkLabel(self.top_frame_graphics, text="Gráfico de Notas")
+        self.graph_label.pack()
+    
         # create third frame
         self.body_frame = customtkinter.CTkFrame(self)
-        self.body_frame.pack()
-        
-        textbox = customtkinter.CTkTextbox(self.body_frame)
-        textbox.pack(pady=(0,20))
+        self.body_frame.configure(fg_color="transparent")
+        self.body_frame.pack(pady=35)
 
-        index = 0.0
-        for discipline in studentHist:
-            textbox.insert(index,discipline[0] + " - " + discipline[1] + " - "+ discipline[2] + " - " + discipline[-1] +"\n")  
-            index+=1
-        
-        textbox.configure(state="disabled",width=505)  
-
+        self.grade_table = GradeTable(self.body_frame)
+        self.grade_table.configure(fg_color="transparent")
+        self.grade_table.pack()
+            
         '''
         -----------------------------------------------------
         | maior nota       menor nota                media  |
@@ -312,8 +439,8 @@ class StatisticsFrame(customtkinter.CTkFrame):
         | cod cadeira nota
         |
         -----------------------------------------------------
-        '''
 
+        '''
         
 class App(customtkinter.CTk):
 
@@ -360,10 +487,10 @@ class App(customtkinter.CTk):
 
     def select_frame_by_name(self, name):
 
-        self.navigation_frame.home_btn.configure(fg_color=("gray75", "gray25") if name == "home" else "transparent")
-        self.navigation_frame.profile_btn.configure(fg_color=("gray75", "gray25") if name == "student" else "transparent")
-        self.navigation_frame.graduation_btn.configure(fg_color=("gray75", "gray25") if name == "graduation" else "transparent")
-        self.navigation_frame.settings_btn.configure(fg_color=("gray75", "gray25") if name == "statistics" else "transparent")
+        self.navigation_frame.home_btn.configure(fg_color=("#242424") if name == "home" else "transparent")
+        self.navigation_frame.profile_btn.configure(fg_color=("#242424") if name == "student" else "transparent")
+        self.navigation_frame.graduation_btn.configure(fg_color=("#242424") if name == "graduation" else "transparent")
+        self.navigation_frame.settings_btn.configure(fg_color=("#242424") if name == "statistics" else "transparent")
 
         if not logged:
             self.home_frame.home_frame_button.configure(fg_color="transparent", text="CARREGUE SEU HISTÓRICO")
@@ -463,32 +590,31 @@ def extract_disciplines(target):
     for disc in target:
         if '/' not in disc and disc[0].isnumeric() and len(disc) > 8:
             cod = disc.split(" ")[0].strip()
-            
             med = disc.split(" ")[-2].strip()
+
+            if ' APR ' in disc:
+                var = " APR "
+            if ' DSP ' in disc:
+                var = " DSP "
+            if ' TRC ' in disc:
+                var = " TRC "
+            if ' CANC ' in disc:
+                var = " CANC "
+            if ' REP ' in disc:
+                var = " REP "
+            if ' INF ' in disc:
+                var = " INF "
             if med == 'MAT':
                 med = ''
+                cred = ''
                 cad = disc.split(" MAT")[0].strip()
                 status = "MAT"
-            if 'APR' in disc:
-                cad = disc.split(" APR")[0].strip()
-                status = 'APR'
-            if 'DSP' in disc:
-                cad = disc.split(" DSP")[0].strip()
-                status = 'DSP'
-            if 'TRC' in disc:
-                cad = disc.split(" TRC")[0].strip()
-                status = 'TRC'
-            if 'CANC' in disc:
-                cad = disc.split(" CANC")[0].strip()
-                status = 'CANC'
-            if 'REP' in disc:
-                cad = disc.split(" REP")[0].strip()
-                status = 'REP'
-            if 'INF' in disc:
-                cad = disc.split(" INF")[0].strip()
-                status = 'INF'
+            else:
+                cred =  disc.split(var)[1].strip().split()[0][-1::]
+                cad = disc.split(var)[0].strip()
+                status = var.strip()
             cad = cad.split('- ')[-1].strip()
-            disciplines.append([cod,cad,status,med])
+            disciplines.append([cod,cad,status,med, cred])
     
     return disciplines
 
@@ -541,8 +667,7 @@ if __name__=='__main__':
     studentDict = extract_dict()
     studentHist = load_student_file() 
     coursesDict = load_courses()
-    print(studentHist)
-
+    
     if logged:
         curriculumList = load_curriculum(studentDict.get("ID Curso"))
 
