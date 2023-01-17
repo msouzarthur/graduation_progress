@@ -1,14 +1,16 @@
 # author: @msouzarthur
 
-import csv, os, shutil, customtkinter
+import csv, os, shutil, customtkinter, tkinter, time
 import pandas as pd
-import tkinter
 from tkinter import filedialog as fd
 from tkinter import ttk
 from pypdf import PdfReader
 from PIL import Image
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
 
 columns = ['CODIGO','CADEIRA','STATUS','MEDIA']
 
@@ -83,7 +85,11 @@ class GraduationFrame(customtkinter.CTkFrame):
         self.combobox.pack(pady=0, anchor="w", side="left", fill=tkinter.BOTH, expand=True)
         self.combobox.configure(width=300)
         
-        self.refresh_button = customtkinter.CTkButton(self.body_frame_label, text="", image=self.refresh_image, anchor="w")
+        self.refresh_button = customtkinter.CTkButton(self.body_frame_label, 
+                                                    text="", 
+                                                    image=self.refresh_image,
+                                                    anchor="w")
+                                                    # command = self.refresh_button_callback(self.table_frame))
         self.refresh_button.configure(width=25)
         self.refresh_button.pack(padx=5, pady=0, side="right")
         
@@ -95,10 +101,10 @@ class GraduationFrame(customtkinter.CTkFrame):
         textbox = customtkinter.CTkTextbox(self.table_frame)
         textbox.pack()
 
-        index = 0.0
-        for discipline in curriculumList:
-            textbox.insert(index,discipline[0] + " - " + discipline[-1] + " - " + discipline[1] +"\n")  
-            index+=1
+        # index = 0.0
+        # for discipline in curriculumList:
+        #     textbox.insert(index,discipline[0] + " - " + discipline[-1] + " - " + discipline[1] +"\n")  
+        #     index+=1
         
         textbox.configure(state="disabled",width=505)  
         
@@ -110,15 +116,15 @@ class GraduationFrame(customtkinter.CTkFrame):
                                                     text="ATENÇÃO: A grade curricular pode estar desatualizada.\nEntre em contato com o desenvolvedor para atualizá-la")
         self.label_warning.pack()
 
-       
-        self.button_course = customtkinter.CTkButton(self.bottom_frame_label, 
-                                                  text="ATUALIZAR GRADE CURRICULAR" if logged else "CARREGAR GRADE CURRICULAR",
-                                                  compound="left",
-                                                  image=self.refresh_image if logged else self.download_image)
-        self.button_course.pack(padx=20)
+        # button to include a curriculum
+        # self.button_course = customtkinter.CTkButton(self.bottom_frame_label, 
+        #                                           text="ATUALIZAR GRADE CURRICULAR" if logged else "CARREGAR GRADE CURRICULAR",
+        #                                           compound="left",
+        #                                           image=self.refresh_image if logged else self.download_image)
+        # self.button_course.pack(padx=20)
 
     def combobox_callback(choice):
-            print("combobox dropdown clicked:", choice)
+        print("combobox dropdown clicked:", choice)
 
 class LoginFrame(customtkinter.CTkFrame):
 
@@ -308,13 +314,16 @@ class GradeTable(customtkinter.CTkFrame):
 
         tree = ttk.Treeview(self, columns=("code","class","status","grade"), show='headings')
 
-        tree.heading('code', text='CÓDIGO')
-        tree.heading('class', text='CADEIRA')
-        tree.heading('status', text='STATUS')
-        tree.heading('grade', text='NOTA')
+        cols = ['CÓDIGO', 'CADEIRA', 'STATUS', 'NOTA']
+        
+        tree["columns"] = cols
 
-        for i in range(len(studentHist)):
-            tree.insert('',tkinter.END, values=studentHist[i])
+        for i in cols:
+            tree.column(i, anchor="w")
+            tree.heading(i, text=i, anchor='w')
+
+        for index, row in studentHist.iterrows():
+            tree.insert("",0,text=index,values=list(row))
 
         tree.grid(row=0, column=0, sticky='nsew')
 
@@ -329,35 +338,21 @@ class GradeTable(customtkinter.CTkFrame):
     
         style.configure("Treeview",
                         background="#404040",
-                        foreground="white",
+                        foreground="transparent",
                         rowheight=25,
-                        fieldbackground="#343638",
-                        bordercolor="#343638",
-                        borderwidth=0)
-        style.map('Treeview', background=[('selected', '#22559b')])
+                        fieldbackground="#404040",
+                        bordercolor="white",
+                        borderwidth=1,
+                        cornerradius=30)
+        style.map('Treeview', background=[('selected', '#144870')])
 
         style.configure("Treeview.Heading",
-                        background="#565b5e",
+                        background="#404040",
                         foreground="white",
                         relief="flat")
-        style.map("Treeview.Heading",
-                    background=[('active', '#3484F0')])
-        # style.configure("Treeview", 
-        #                 background="#3b3b3b",
-        #                 foreground="white",
-        #                 rowheight=25,
-        #                 fieldbackground="#343638",
-        #                 bordercolor="#343638",
-        #                 borderwidth=0,
-        #                 borderradius=10)
-        # style.configure('Treeview.Heading',
-        #                 background="#3b3b3b",
-        #                 bordercolor="#00000",
-        #                 fontcolor="white")
-        # style.map('Treeview', background=[('selected', '#404040')])
 
-    def set_content(self,content):
-        self.target = content
+        style.map("Treeview.Heading",
+                    background=[('active', '#144870')])
 
 class StatisticsFrame(customtkinter.CTkFrame):
 
@@ -381,37 +376,35 @@ class StatisticsFrame(customtkinter.CTkFrame):
         self.top_frame_indicators.configure(fg_color="transparent")
         self.top_frame_indicators.pack(pady=35, fill="x")
  
-        higher_grade = max([float(disc[3].replace(",",".")) for disc in studentHist if disc[3]])
-        lower_grade = min([float(disc[3].replace(",",".")) for disc in studentHist if disc[3]])
-        mean_grade = round(sum([float(disc[3].replace(",",".")) for disc in studentHist if disc[3]])/len([float(disc[3].replace(",",".")) for disc in studentHist if disc[3]]),2)
+        higher_grade = studentHist.media.max()
+        lower_grade = studentHist.media.min()
+        mean_grade = studentHist.media.mean()
         count_higher = 0
         count_lower = 0
-        IRA = sum(
-            [float(disc[4].replace(",","."))*float(disc[3].replace(",",".")) for disc in studentHist if disc[3]]
-        )/sum(
-            [float(disc[4].replace(",",".")) for disc in studentHist if disc[3]]
-        )
-        
-        for disc in studentHist:
-            if disc[3] and float(disc[3].replace(",",".")) == higher_grade:
-                count_higher+=1
-            if disc[3] and float(disc[3].replace(",",".")) == lower_grade:
-                count_lower+=1
+        IRA = (
+            studentHist.media*studentHist.creditos
+            ).sum() / studentHist.creditos.sum()
 
-        self.higher_grade_label = customtkinter.CTkLabel(self.top_frame_indicators, text=str(higher_grade)+"\nMAIOR NOTA")
-        self.higher_grade_label.configure(fg_color="#144870", corner_radius=10, font=('arial',14))
+        
+        count_higher = studentHist.media.value_counts()[studentHist.media.max()]
+        count_lower = studentHist.media.value_counts()[studentHist.media.min()]
+
+        self.higher_grade_label = customtkinter.CTkLabel(self.top_frame_indicators, 
+                                                        text="{:0.2f}\nMAIOR NOTA ({})".format(higher_grade, count_higher) if count_higher > 1 else "{:0.2f}\nMAIOR NOTA".format(higher_grade))
+        self.higher_grade_label.configure(fg_color="#1F6AA5", corner_radius=10, font=('arial',14))
         self.higher_grade_label.pack(padx=20, ipadx=10, ipady=10, side="left", fill=tkinter.BOTH, expand=True)
 
-        self.lower_grade_label = customtkinter.CTkLabel(self.top_frame_indicators, text=str(lower_grade)+"\nMENOR NOTA")
-        self.lower_grade_label.configure(fg_color="#144870", corner_radius=10, font=('arial',14))
+        self.lower_grade_label = customtkinter.CTkLabel(self.top_frame_indicators, 
+                                                        text="{:0.2f}\nMENOR NOTA ({})".format(lower_grade, count_lower) if count_lower > 1 else "{:0.2f}\nMENOR NOTA".format(lower_grade))
+        self.lower_grade_label.configure(fg_color="#1F6AA5", corner_radius=10, font=('arial',14))
         self.lower_grade_label.pack(padx=20, ipadx=10, ipady=10, side="left", fill=tkinter.BOTH, expand=True)
 
-        self.mean_grade_label = customtkinter.CTkLabel(self.top_frame_indicators, text=str(mean_grade)+"\nMÉDIA GERAL")
-        self.mean_grade_label.configure(fg_color="#144870", corner_radius=10, font=('arial',14))
+        self.mean_grade_label = customtkinter.CTkLabel(self.top_frame_indicators, text="{:0.2f}\nMÉDIA GERAL".format(mean_grade))
+        self.mean_grade_label.configure(fg_color="#1F6AA5", corner_radius=10, font=('arial',14))
         self.mean_grade_label.pack(padx=20, ipadx=10, ipady=10, side="right", fill=tkinter.BOTH, expand=True)
         
-        self.ira_label = customtkinter.CTkLabel(self.top_frame_indicators, text=str(round(IRA,2))+"\nIRA")
-        self.ira_label.configure(fg_color="#144870", corner_radius=10, font=('arial',14))
+        self.ira_label = customtkinter.CTkLabel(self.top_frame_indicators, text="{:0.2f}\nIRA".format(IRA))
+        self.ira_label.configure(fg_color="#1F6AA5", corner_radius=10, font=('arial',14))
         self.ira_label.pack(padx=20, ipadx=10, ipady=10, side="right", fill=tkinter.BOTH, expand=True)
         
         # create second frame
@@ -421,6 +414,30 @@ class StatisticsFrame(customtkinter.CTkFrame):
         self.graph_label = customtkinter.CTkLabel(self.top_frame_graphics, text="Gráfico de Notas")
         self.graph_label.pack()
     
+        # PERCENTUAL CONCLUIDAS | PERCENTUAL CONCLUIDAS OBR | PERCENTUAL CONCLUIDAS OPT
+        print(dfCurriculum)
+        # CADEIRAS OBRIGATORIAS
+        # df_grade_obr = df_grade[df_grade['TYP']=="OBRIGATÓRIA"]
+
+        # CADEIRAS OPTATIVAS
+        # df_grade_opt = df_grade[df_grade['TYP']=="OPTATIVA"]
+
+        # TOTAL E TOTAL
+        # lst_student = [x[0] for x in studentHist]
+        # common_obr = [x for x in df_grade_obr.COD.to_list() if x in lst_student]
+        # common_opt = [x for x in df_grade_opt.COD.to_list() if x in lst_student]
+
+        # dt = {"tipo":['total','obrigatórias','optativas'], 
+        #     "total":[len(df_grade), len(df_grade_obr), len(df_grade_opt)],
+        #     "concluidas":[len(studentHist), len(common_obr), len(common_opt)]}
+
+        # df = pd.DataFrame(data=dt)
+        
+
+
+
+
+
         # create third frame
         self.body_frame = customtkinter.CTkFrame(self)
         self.body_frame.configure(fg_color="transparent")
@@ -541,43 +558,69 @@ def load_courses(file_path = os.path.join(os.path.dirname(os.path.realpath(__fil
         pass
         print("<error> erro ao carregar cursos")
 
-def load_curriculum(course_id , file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), r"docs/")):
+def save_curriculum(target):
+    driver = webdriver.Edge(os.path.join(os.path.dirname(os.path.realpath(__file__)),r'driver/msedgedriver.exe'))
+    driver.get("https://cobalto.ufpel.edu.br/portal/cadastros/curriculoPublico")
+    
+    time.sleep(1.5)
+    search = driver.find_element(By.ID, "txtCodigo")
+    search.click()
+    search.send_keys(target, Keys.ENTER)
+
+    time.sleep(1.5)
+    content = driver.find_elements(By.TAG_NAME, "tr")
+    content[2].click()
+
+    time.sleep(1.5)
+    content = driver.find_elements(By.TAG_NAME, "tr")
+    content.pop(0)
+
+    curriculumList = []
+
+    for x in content:
+        if "COMPLEMENTARES" not in x.text:
+            if len(x.text)>40:
+                x = x.text.split('\n')[0].strip()
+
+                cod = x.split(" ")[0].strip()
+
+                crd = x.split("DISCIPLINA")[0].strip()
+                crd = crd.split(" ")[-1].strip()
+
+                typ = x.split("DISCIPLINA")[1].strip()
+                typ = typ.split(" ")[0].strip()
+
+                cad = x.replace(cod,'')
+
+                if 'Departamento' in cad:
+                    cad = cad.split('Departamento')[0].strip()
+                if 'Centro' in cad:
+                    cad = cad.split('Centro')[0].strip()
+                if 'Departamento' in cad:
+                    cad = cad.split('Departamento')[0].strip()
+
+                curriculumList.append([cod,cad,crd,typ])
+    
+    driver.close()
+
+    file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), r"docs", studentDict.get("ID Curso")+".csv")    
+    
+    with open(file_path, 'w') as file:
+        writer = csv.writer(file)
+        writer.writerow(curriculumList)
+    
+def load_curriculum(course_id , file_path = r'C:\Users\arthu\Desktop\graduation_progress\docs\cursos'):
     print("carregando grade curricular do curso")
 
-    file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), r"docs/"+course_id+".pdf")
+    file_path = os.path.join(file_path, course_id+".csv")
 
     if os.path.exists(file_path):
-        try:        
-            reader = PdfReader(file_path)
-            content = extract_content(reader)
-            content = content.split("\n")
-            content = [x.strip() for x in content]
-            
-            # remove trash
-            if len(content[-1]) < 9:
-                content.pop(-1)
-
-            curriculumList = []
-            for x in content:
-                if "ATIVIDADE" not in x:
-                    if len(x.split(" ")[0]) < 8:
-                        x = x.replace(" ","",1)
-                    code = x.split(" ", 1)[0].strip()
-                    discipline = x.split("DISCIPLINA")
-                    discipline = discipline[0].split(" ",1)[1].strip()
-                    structure = x.split("DISCIPLINA",1)[1].strip()
-                    structure = structure.replace(" ","")
-                    curriculumList.append(
-                        [code,discipline,structure]
-                    )
-
-            return curriculumList
-        except:
-            print("<error> erro ao ler arquivo")
+        dfCurriculum = pd.read_csv(file_path, encoding='latin-1')
+        return dfCurriculum
     else:
         print("<error> erro ao localizar arquivo")
         print("<error> curso nao suportado")
-        
+
 def extract_content(target):
     content = []
     for page in target.pages:
@@ -591,6 +634,7 @@ def extract_disciplines(target):
         if '/' not in disc and disc[0].isnumeric() and len(disc) > 8:
             cod = disc.split(" ")[0].strip()
             med = disc.split(" ")[-2].strip()
+            med = med.replace(",",".")
 
             if ' APR ' in disc:
                 var = " APR "
@@ -624,7 +668,10 @@ def load_student_file(file_path = os.path.join(os.path.dirname(os.path.realpath(
         reader = PdfReader(file_path)
         studentHist = extract_content(reader)
         studentHist = extract_disciplines(studentHist)
-        return studentHist
+        df = pd.DataFrame(studentHist, columns=['codigo','cadeira','situacao','media','creditos'])
+        df['creditos'] = pd.to_numeric(df['creditos'], errors='coerce')
+        df['media'] = pd.to_numeric(df['media'], errors='coerce')
+        return df
     except:
         pass
         print("<error> erro ao carregar historico do aluno")
@@ -669,7 +716,7 @@ if __name__=='__main__':
     coursesDict = load_courses()
     
     if logged:
-        curriculumList = load_curriculum(studentDict.get("ID Curso"))
+        dfCurriculum = load_curriculum(studentDict.get("ID Curso"))
 
     app = App()
     app.mainloop()
