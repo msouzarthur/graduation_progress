@@ -8,12 +8,10 @@ from pypdf import PdfReader
 from PIL import Image
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
-
-columns = ['CODIGO','CADEIRA','STATUS','MEDIA']
 
 class CourseFrame(customtkinter.CTkFrame):
 
@@ -40,6 +38,28 @@ class CourseFrame(customtkinter.CTkFrame):
                                                     compound="left",   
                                                     image=self.refresh_image if logged else self.download_image)
         self.button_course.pack(padx=20, pady=10)
+
+class CurriculumTable(customtkinter.CTkFrame):
+    
+    def __init__(self, *args, header_name="TABLE", **kwargs):
+        
+        super().__init__(*args, **kwargs)
+                
+        import sv_ttk
+
+        root = tkinter.Frame()
+        
+        tree = ttk.Treeview(self, columns=('CÓDIGO', 'CADEIRA', 'CRÉDITOS', 'TIPO'), show='headings')
+        cols = ('CÓDIGO', 'CADEIRA', 'CRÉDITOS', 'TIPO')
+        for i in cols:
+            tree.column(i, anchor="w")
+            tree.heading(i, text=i, anchor='w')
+
+        for index, row in dfCurriculum.iterrows():
+            tree.insert("",0,text=index,values=list(row))
+            
+        tree.grid(row=0, column=0, sticky='nsew')
+        sv_ttk.set_theme("dark")
 
 class GraduationFrame(customtkinter.CTkFrame):
 
@@ -97,6 +117,10 @@ class GraduationFrame(customtkinter.CTkFrame):
         self.body_frame.configure(fg_color="transparent")
         self.body_frame.pack()
         
+        self.grade_table = CurriculumTable(self.body_frame)
+        self.grade_table.configure(fg_color="transparent")
+        self.grade_table.pack()
+
         # combo_default = customtkinter.StringVar(value=coursesDict.get(studentDict.get("ID Curso")))  
         # self.combobox = customtkinter.CTkComboBox(self.body_frame_label,
         #                                     values=coursesDict.values(),
@@ -112,21 +136,6 @@ class GraduationFrame(customtkinter.CTkFrame):
         #                                             # command = self.refresh_button_callback(self.table_frame))
         # self.refresh_button.configure(width=25)
         # self.refresh_button.pack(padx=5, pady=0, side="right")
-        
-        # self.table_frame = customtkinter.CTkFrame(self)
-        # self.table_frame.configure(fg_color="transparent")
-        # self.table_frame.pack(pady=(5,20))
-
-        # # create scrollable textbox
-        # textbox = customtkinter.CTkTextbox(self.table_frame)
-        # textbox.pack()
-
-        # index = 0.0
-        # for discipline in curriculumList:
-        #     textbox.insert(index,discipline[0] + " - " + discipline[-1] + " - " + discipline[1] +"\n")  
-        #     index+=1
-        
-        # textbox.configure(state="disabled",width=505)  
         
         self.bottom_frame = customtkinter.CTkFrame(self)
         self.bottom_frame.configure(fg_color="transparent")
@@ -330,16 +339,12 @@ class GradeTable(customtkinter.CTkFrame):
         
         super().__init__(*args, **kwargs)
                 
-        self.body_frame = customtkinter.CTkFrame(self)
-        self.body_frame.configure(fg_color="transparent")
-        self.body_frame.grid()
+        import sv_ttk
 
-        tree = ttk.Treeview(self, columns=("code","class","status","grade"), show='headings')
-
-        cols = ['CÓDIGO', 'CADEIRA', 'STATUS', 'NOTA']
+        root = tkinter.Frame()
         
-        tree["columns"] = cols
-
+        tree = ttk.Treeview(self, columns=('CÓDIGO', 'CADEIRA', 'STATUS', 'NOTA'), show='headings')
+        cols = ('CÓDIGO', 'CADEIRA', 'STATUS', 'NOTA')
         for i in cols:
             tree.column(i, anchor="w")
             tree.heading(i, text=i, anchor='w')
@@ -348,33 +353,7 @@ class GradeTable(customtkinter.CTkFrame):
             tree.insert("",0,text=index,values=list(row))
 
         tree.grid(row=0, column=0, sticky='nsew')
-
-        # create CTk scrollbar
-        scrollbar = customtkinter.CTkScrollbar(self, command=tree.yview)
-        scrollbar.grid(row=0, column=1, sticky="ns")
-        tree.configure(yscroll=scrollbar.set)
-        scrollbar.grid(row=0, column=1, sticky='ns')
-
-        style = ttk.Style()
-        style.theme_use("default")
-    
-        style.configure("Treeview",
-                        background="#404040",
-                        foreground="transparent",
-                        rowheight=25,
-                        fieldbackground="#404040",
-                        bordercolor="white",
-                        borderwidth=1,
-                        cornerradius=30)
-        style.map('Treeview', background=[('selected', '#144870')])
-
-        style.configure("Treeview.Heading",
-                        background="#404040",
-                        foreground="white",
-                        relief="flat")
-
-        style.map("Treeview.Heading",
-                    background=[('active', '#144870')])
+        sv_ttk.set_theme("dark")
 
 class StatisticsFrame(customtkinter.CTkFrame):
 
@@ -396,7 +375,7 @@ class StatisticsFrame(customtkinter.CTkFrame):
         # create first frame 
         self.top_frame_indicators = customtkinter.CTkFrame(self)
         self.top_frame_indicators.configure(fg_color="transparent")
-        self.top_frame_indicators.pack(pady=35, fill="x")
+        self.top_frame_indicators.pack(pady=(30,15), fill="x")
  
         higher_grade = studentHist.media.max()
         lower_grade = studentHist.media.min()
@@ -453,53 +432,45 @@ class StatisticsFrame(customtkinter.CTkFrame):
             index=['não concluído','já concluído']
         )
 
-        fig_size = (1,1)
+        fig_size = (1.5,1.5)
+
         # first graph  
         fig = Figure(figsize=fig_size, dpi=100)
         fig.patch.set_facecolor('#404040')
-
         ax = fig.add_subplot()
-        
-        tot_graph = df_graph.plot.pie(y='total', subplots=True, ax=ax,
-            title="Total", legend=False, autopct='%1.1f%%', explode=(0, 0.1), shadow=True, startangle=0
+        tot_graph = df_graph.plot.pie(y='total', subplots=True, ax=ax, legend=False, autopct='%1.1f%%', 
+            explode=(0, 0.1), shadow=True, startangle=0, labels=None
         )
-
         canvas_tot = FigureCanvasTkAgg(fig, self.left_graph_frame)
         canvas_tot.draw()
-        canvas_tot.get_tk_widget().pack()
+        canvas_tot.get_tk_widget().pack(side='left', ipadx=10, ipady=10)
 
         # second graph
         fig = Figure(figsize=fig_size, dpi=100)
         fig.patch.set_facecolor('#404040')
-
         ax = fig.add_subplot()
-        
-        obr_graph = df_graph.plot.pie(y='obrigatória', subplots=True, ax=ax,
-            title="Cadeiras Obrigatórias", legend=False, autopct='%1.1f%%', explode=(0, 0.1), shadow=True, startangle=0
+        obr_graph = df_graph.plot.pie(y='obrigatória', subplots=True, ax=ax, legend=False, autopct='%1.1f%%', 
+            explode=(0, 0.1), shadow=True, startangle=0, labels=None
         )
-
         canvas_obr = FigureCanvasTkAgg(fig, self.mid_graph_frame)
         canvas_obr.draw()
-        canvas_obr.get_tk_widget().pack()
+        canvas_obr.get_tk_widget().pack(side='left', ipadx=10, ipady=10)
 
         # third graph 
         fig = Figure(figsize=fig_size, dpi=100)
         fig.patch.set_facecolor('#404040')
-
         ax = fig.add_subplot()
-        
-        opt_graph = df_graph.plot.pie(y='optativa', subplots=True, ax=ax,
-            title="Cadeiras Optativas", legend=False, autopct='%1.1f%%', explode=(0, 0.1), shadow=True, startangle=0
+        opt_graph = df_graph.plot.pie(y='optativa', subplots=True, ax=ax, legend=True, autopct='%1.1f%%', 
+            explode=(0, 0.1), shadow=True, startangle=0
         )
-
         canvas_opt = FigureCanvasTkAgg(fig, self.right_graph_frame)
         canvas_opt.draw()
-        canvas_opt.get_tk_widget().pack()
+        canvas_opt.get_tk_widget().pack(side='left', ipadx=10, ipady=10)
 
         # create third frame
         self.body_frame = customtkinter.CTkFrame(self)
         self.body_frame.configure(fg_color="transparent")
-        self.body_frame.pack(pady=35)
+        self.body_frame.pack()
 
         self.grade_table = GradeTable(self.body_frame)
         self.grade_table.configure(fg_color="transparent")
