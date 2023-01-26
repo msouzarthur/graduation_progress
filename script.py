@@ -1,11 +1,12 @@
 # author: @msouzarthur
 
-import csv, os, shutil, customtkinter, tkinter, time
+import csv, os, shutil, customtkinter, tkinter, time, webbrowser
 import pandas as pd
 from tkinter import filedialog as fd
 from tkinter import ttk
 from pypdf import PdfReader
 from PIL import Image
+import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from selenium import webdriver
@@ -42,6 +43,14 @@ class CourseFrame(customtkinter.CTkFrame):
 
 class GraduationFrame(customtkinter.CTkFrame):
 
+    def set_value_obr(self, event):
+        if int(self.entry_hour_obr.get()) > 100:
+            hour_obr = int(self.entry_hour_obr.get())
+
+    def set_value_opt(self, event):
+        if int(self.entry_hour_opt.get()) >= 0:
+            hour_opt = int(self.entry_hour_opt.get())
+
     def __init__(self, *args, header_name="COURSE", **kwargs):    
 
         image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), r"img")
@@ -54,77 +63,85 @@ class GraduationFrame(customtkinter.CTkFrame):
         self.header_name = header_name
 
         # create top frame
-        self.top_frame_label = customtkinter.CTkFrame(self)
-        self.top_frame_label.configure(fg_color="transparent")
-        self.top_frame_label.pack(pady=35)
+        self.top_frame = customtkinter.CTkFrame(self)
+        self.top_frame.configure(fg_color="transparent")
+        self.top_frame.pack(pady=35)
         
-        self.top_frame_label_left = customtkinter.CTkFrame(self.top_frame_label)
-        self.top_frame_label_left.configure(fg_color="transparent")
-        self.top_frame_label_left.pack(padx=30, side="left")
+        self.top_frame_left = customtkinter.CTkFrame(self.top_frame)
+        self.top_frame_left.configure(fg_color="transparent")
+        self.top_frame_left.pack(padx=30, side="left")
 
-        self.top_frame_label_right = customtkinter.CTkFrame(self.top_frame_label)
-        self.top_frame_label_right.configure(fg_color="transparent")
-        self.top_frame_label_right.pack(padx=30, side="right")
+        self.top_frame_right = customtkinter.CTkFrame(self.top_frame)
+        self.top_frame_right.configure(fg_color="transparent")
+        self.top_frame_right.pack(padx=30, side="right")
 
-        self.label_course_img = customtkinter.CTkLabel(self.top_frame_label_left, text="", image=self.book_image)
+        self.label_course_img = customtkinter.CTkLabel(self.top_frame_left, text="", image=self.book_image)
         self.label_course_img.pack()
         
-        self.label_course_name = customtkinter.CTkLabel(self.top_frame_label_right, text=studentDict.get("Curso"))
-        self.label_course_name.pack()
+        self.label_course_name = customtkinter.CTkEntry(self.top_frame_right, placeholder_text=studentDict.get("Curso"))
+        self.label_course_name.configure(state='disabled', width=200)
+        self.label_course_name.pack(pady=5)
         
-        # create body frame
-        self.body_frame_label = customtkinter.CTkFrame(self)
-        self.body_frame_label.configure(fg_color="transparent")
-        self.body_frame_label.pack()
-        
-        combo_default = customtkinter.StringVar(value=coursesDict.get(studentDict.get("ID Curso")))  
-        self.combobox = customtkinter.CTkComboBox(self.body_frame_label,
-                                            values=coursesDict.values(),
-                                            # command=self.combobox_callback,
-                                            variable=combo_default)
-        self.combobox.pack(pady=0, anchor="w", side="left", fill=tkinter.BOTH, expand=True)
-        self.combobox.configure(width=300)
-        
-        self.refresh_button = customtkinter.CTkButton(self.body_frame_label, 
-                                                    text="", 
-                                                    image=self.refresh_image,
-                                                    anchor="w")
-                                                    # command = self.refresh_button_callback(self.table_frame))
-        self.refresh_button.configure(width=25)
-        self.refresh_button.pack(padx=5, pady=0, side="right")
-        
-        self.table_frame = customtkinter.CTkFrame(self)
-        self.table_frame.configure(fg_color="transparent")
-        self.table_frame.pack(pady=(5,20))
+        self.entry_hour_obr = customtkinter.CTkEntry(self.top_frame_right, placeholder_text="horas obrigatórias: "+str(hour_obr))
+        self.entry_hour_obr.configure(width=200)
+        self.entry_hour_obr.pack(pady=5)
+        self.entry_hour_obr.bind("<Return>", self.set_value_obr)
 
-        # create scrollable textbox
-        textbox = customtkinter.CTkTextbox(self.table_frame)
-        textbox.pack()
+        self.entry_hour_opt = customtkinter.CTkEntry(self.top_frame_right, placeholder_text="horas optativas: "+str(hour_opt))
+        self.entry_hour_opt.configure(width=200)
+        self.entry_hour_opt.pack(pady=5)
+        self.entry_hour_opt.bind("<Return>", self.set_value_opt)
+
+        # create body frame
+        self.body_frame = customtkinter.CTkFrame(self)
+        self.body_frame.configure(fg_color="transparent")
+        self.body_frame.pack()
+        
+        # combo_default = customtkinter.StringVar(value=coursesDict.get(studentDict.get("ID Curso")))  
+        # self.combobox = customtkinter.CTkComboBox(self.body_frame_label,
+        #                                     values=coursesDict.values(),
+        #                                     # command=self.combobox_callback,
+        #                                     variable=combo_default)
+        # self.combobox.pack(pady=0, anchor="w", side="left", fill=tkinter.BOTH, expand=True)
+        # self.combobox.configure(width=300)
+        
+        # self.refresh_button = customtkinter.CTkButton(self.body_frame_label, 
+        #                                             text="", 
+        #                                             image=self.refresh_image,
+        #                                             anchor="w")
+        #                                             # command = self.refresh_button_callback(self.table_frame))
+        # self.refresh_button.configure(width=25)
+        # self.refresh_button.pack(padx=5, pady=0, side="right")
+        
+        # self.table_frame = customtkinter.CTkFrame(self)
+        # self.table_frame.configure(fg_color="transparent")
+        # self.table_frame.pack(pady=(5,20))
+
+        # # create scrollable textbox
+        # textbox = customtkinter.CTkTextbox(self.table_frame)
+        # textbox.pack()
 
         # index = 0.0
         # for discipline in curriculumList:
         #     textbox.insert(index,discipline[0] + " - " + discipline[-1] + " - " + discipline[1] +"\n")  
         #     index+=1
         
-        textbox.configure(state="disabled",width=505)  
+        # textbox.configure(state="disabled",width=505)  
         
-        self.bottom_frame_label = customtkinter.CTkFrame(self)
-        self.bottom_frame_label.configure(fg_color="transparent")
-        self.bottom_frame_label.pack()
+        self.bottom_frame = customtkinter.CTkFrame(self)
+        self.bottom_frame.configure(fg_color="transparent")
+        self.bottom_frame.pack()
 
-        self.label_warning = customtkinter.CTkLabel(self.bottom_frame_label, 
+        self.label_warning = customtkinter.CTkLabel(self.bottom_frame, 
                                                     text="ATENÇÃO: A grade curricular pode estar desatualizada.\nEntre em contato com o desenvolvedor para atualizá-la")
         self.label_warning.pack()
 
         # button to include a curriculum
-        # self.button_course = customtkinter.CTkButton(self.bottom_frame_label, 
+        # self.button_course = customtkinter.CTkButton(self.bottom_frame, 
         #                                           text="ATUALIZAR GRADE CURRICULAR" if logged else "CARREGAR GRADE CURRICULAR",
         #                                           compound="left",
         #                                           image=self.refresh_image if logged else self.download_image)
         # self.button_course.pack(padx=20)
-
-    def combobox_callback(choice):
-        print("combobox dropdown clicked:", choice)
 
 class LoginFrame(customtkinter.CTkFrame):
 
@@ -200,42 +217,39 @@ class StudentFrame(customtkinter.CTkFrame):
         super().__init__(*args, **kwargs)
         
         self.header_name = header_name
-
+        
+        # create top frame
         self.top_frame = customtkinter.CTkFrame(self)
         self.top_frame.configure(fg_color="transparent")
-        self.top_frame.pack(padx=30, ipadx=0, pady=(30,0))
+        self.top_frame.pack(pady=35)
 
         self.top_frame_left = customtkinter.CTkFrame(self.top_frame)
         self.top_frame_left.configure(fg_color="transparent")
-        self.top_frame_left.pack(side="left",fill="x")
+        self.top_frame_left.pack(padx=30, side="left")
 
-        self.top_frame_top = customtkinter.CTkFrame(self.top_frame)
-        self.top_frame_top.configure(fg_color="transparent")
-        self.top_frame_top.pack(fill="x")
+        self.top_frame_right = customtkinter.CTkFrame(self.top_frame)
+        self.top_frame_right.configure(fg_color="transparent")
+        self.top_frame_right.pack(padx=30, side="right")
 
-        self.top_frame_bottom = customtkinter.CTkFrame(self.top_frame)
-        self.top_frame_bottom.configure(fg_color="transparent")
-        self.top_frame_bottom.pack(fill="x")
-
-        self.body_frame = customtkinter.CTkFrame(self)
-        self.body_frame.configure(fg_color="transparent")
-        self.body_frame.pack(padx=60, pady=(40,0), fill="x")
-    
         self.student_img = customtkinter.CTkLabel(self.top_frame_left, 
                                                         text="", 
                                                         image=self.profile_image)
         self.student_img.configure(fg_color="transparent")
         self.student_img.pack(padx=20, fill="x")
+
+        self.student_name = customtkinter.CTkEntry(self.top_frame_right, placeholder_text=studentDict.get("Nome") if logged else "SEM DADOS")
+        self.student_name.configure(width=200, state='disabled')
+        self.student_name.pack(pady=5, fill="x", anchor="e")
             
-        self.student_name = customtkinter.CTkLabel(self.top_frame_top, text=studentDict.get("Nome") if logged else "SEM DADOS")
-        self.student_name.configure(fg_color="transparent")
-        self.student_name.pack(padx=15, fill="x", anchor="e")
+        self.student_status = customtkinter.CTkEntry(self.top_frame_right, placeholder_text=studentDict.get("Curso") if logged else "SEM DADOS")
+        self.student_status.configure(width=200, state='disabled')
+        self.student_status.pack(pady=5, fill="x", anchor="e")
+
+        # create body frame
+        self.body_frame = customtkinter.CTkFrame(self)
+        self.body_frame.configure(fg_color="transparent")
+        self.body_frame.pack(padx=60, pady=(40,0), fill="x")
             
-        self.student_status = customtkinter.CTkLabel(self.top_frame_bottom, text=studentDict.get("Curso") if logged else "SEM DADOS")
-        self.student_status.configure(fg_color="transparent")
-        self.student_status.pack(padx=15, fill="x", anchor="e")
-        
-        
         if logged:
             for data in studentDict:
                 if data == "ID Curso" or data == "Nome": 
@@ -254,8 +268,16 @@ class StudentFrame(customtkinter.CTkFrame):
                                                     compound='left', 
                                                     image=self.refresh_image if logged else self.download_image, 
                                                     command=self.select_pdf_file)
-        self.button_student.pack(padx=20, pady=(90,0), anchor="s")
-    
+        self.button_student.pack(padx=20, pady=15, anchor="s")
+
+        self.button_help = customtkinter.CTkButton(self.body_frame, 
+                                                    text="onde consigo meu histórico?",
+                                                    command=self.callback)
+        self.button_help.pack(pady=15)
+
+    def callback(self):
+        webbrowser.open_new(r"https://cobalto.ufpel.edu.br/academico/alunos/historicoAluno")
+
     def select_pdf_file(self):
         global studentDict, studentHist, app
         filename = fd.askopenfilename(
@@ -385,7 +407,6 @@ class StatisticsFrame(customtkinter.CTkFrame):
             studentHist.media*studentHist.creditos
             ).sum() / studentHist.creditos.sum()
 
-        
         count_higher = studentHist.media.value_counts()[studentHist.media.max()]
         count_lower = studentHist.media.value_counts()[studentHist.media.min()]
 
@@ -408,35 +429,72 @@ class StatisticsFrame(customtkinter.CTkFrame):
         self.ira_label.pack(padx=20, ipadx=10, ipady=10, side="right", fill=tkinter.BOTH, expand=True)
         
         # create second frame
-        self.top_frame_graphics = customtkinter.CTkFrame(self)
-        self.top_frame_graphics.pack()
+        self.graph_frame = customtkinter.CTkFrame(self)
+        self.graph_frame.pack()
+
+        self.left_graph_frame = customtkinter.CTkFrame(self.graph_frame)
+        self.left_graph_frame.pack(side="left")
+        self.mid_graph_frame = customtkinter.CTkFrame(self.graph_frame)
+        self.mid_graph_frame.pack(side="left")
+        self.right_graph_frame = customtkinter.CTkFrame(self.graph_frame)
+        self.right_graph_frame.pack(side="left")
         
-        self.graph_label = customtkinter.CTkLabel(self.top_frame_graphics, text="Gráfico de Notas")
-        self.graph_label.pack()
-    
-        # PERCENTUAL CONCLUIDAS | PERCENTUAL CONCLUIDAS OBR | PERCENTUAL CONCLUIDAS OPT
-        print(dfCurriculum)
-        # CADEIRAS OBRIGATORIAS
-        # df_grade_obr = df_grade[df_grade['TYP']=="OBRIGATÓRIA"]
+        dfCurriculum['concluida'] = dfCurriculum['codigo'].isin(studentHist['codigo'])
 
-        # CADEIRAS OPTATIVAS
-        # df_grade_opt = df_grade[df_grade['TYP']=="OPTATIVA"]
+        obr_total_credits = dfCurriculum[(dfCurriculum['concluida']) & (dfCurriculum['status']=='OBRIGATÓRIA')].creditos.sum()
+        opt_total_credits = dfCurriculum[(dfCurriculum['concluida']) & (dfCurriculum['status']=='OPTATIVA')].creditos.sum()
 
-        # TOTAL E TOTAL
-        # lst_student = [x[0] for x in studentHist]
-        # common_obr = [x for x in df_grade_obr.COD.to_list() if x in lst_student]
-        # common_opt = [x for x in df_grade_opt.COD.to_list() if x in lst_student]
+        df_graph = pd.DataFrame(
+            [
+                [hour_obr-obr_total_credits*credit, hour_opt-opt_total_credits*credit, hour_obr+hour_opt],
+                [obr_total_credits*credit, opt_total_credits*credit, (opt_total_credits+obr_total_credits)*credit]
+            ],
+            columns=['obrigatória', 'optativa','total'],
+            index=['não concluído','já concluído']
+        )
 
-        # dt = {"tipo":['total','obrigatórias','optativas'], 
-        #     "total":[len(df_grade), len(df_grade_obr), len(df_grade_opt)],
-        #     "concluidas":[len(studentHist), len(common_obr), len(common_opt)]}
+        fig_size = (1,1)
+        # first graph  
+        fig = Figure(figsize=fig_size, dpi=100)
+        fig.patch.set_facecolor('#404040')
 
-        # df = pd.DataFrame(data=dt)
+        ax = fig.add_subplot()
         
+        tot_graph = df_graph.plot.pie(y='total', subplots=True, ax=ax,
+            title="Total", legend=False, autopct='%1.1f%%', explode=(0, 0.1), shadow=True, startangle=0
+        )
 
+        canvas_tot = FigureCanvasTkAgg(fig, self.left_graph_frame)
+        canvas_tot.draw()
+        canvas_tot.get_tk_widget().pack()
 
+        # second graph
+        fig = Figure(figsize=fig_size, dpi=100)
+        fig.patch.set_facecolor('#404040')
 
+        ax = fig.add_subplot()
+        
+        obr_graph = df_graph.plot.pie(y='obrigatória', subplots=True, ax=ax,
+            title="Cadeiras Obrigatórias", legend=False, autopct='%1.1f%%', explode=(0, 0.1), shadow=True, startangle=0
+        )
 
+        canvas_obr = FigureCanvasTkAgg(fig, self.mid_graph_frame)
+        canvas_obr.draw()
+        canvas_obr.get_tk_widget().pack()
+
+        # third graph 
+        fig = Figure(figsize=fig_size, dpi=100)
+        fig.patch.set_facecolor('#404040')
+
+        ax = fig.add_subplot()
+        
+        opt_graph = df_graph.plot.pie(y='optativa', subplots=True, ax=ax,
+            title="Cadeiras Optativas", legend=False, autopct='%1.1f%%', explode=(0, 0.1), shadow=True, startangle=0
+        )
+
+        canvas_opt = FigureCanvasTkAgg(fig, self.right_graph_frame)
+        canvas_opt.draw()
+        canvas_opt.get_tk_widget().pack()
 
         # create third frame
         self.body_frame = customtkinter.CTkFrame(self)
@@ -669,6 +727,7 @@ def load_student_file(file_path = os.path.join(os.path.dirname(os.path.realpath(
         studentHist = extract_content(reader)
         studentHist = extract_disciplines(studentHist)
         df = pd.DataFrame(studentHist, columns=['codigo','cadeira','situacao','media','creditos'])
+        df['codigo'] = pd.to_numeric(df['codigo'], errors='coerce')
         df['creditos'] = pd.to_numeric(df['creditos'], errors='coerce')
         df['media'] = pd.to_numeric(df['media'], errors='coerce')
         return df
@@ -709,6 +768,10 @@ def extract_dict(file_path = os.path.join(os.path.dirname(os.path.realpath(__fil
         print("<error> erro ao carregar dados do aluno")
         
 if __name__=='__main__':
+
+    credit = 17
+    hour_obr = 3196
+    hour_opt = 272
 
     logged = False
     studentDict = extract_dict()
