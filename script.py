@@ -63,14 +63,6 @@ class CurriculumTable(customtkinter.CTkFrame):
 
 class GraduationFrame(customtkinter.CTkFrame):
 
-    def set_value_obr(self, event):
-        if int(self.entry_hour_obr.get()) > 100:
-            hour_obr = int(self.entry_hour_obr.get())
-
-    def set_value_opt(self, event):
-        if int(self.entry_hour_opt.get()) >= 0:
-            hour_opt = int(self.entry_hour_opt.get())
-
     def __init__(self, *args, header_name="COURSE", **kwargs):    
 
         image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), r"img")
@@ -121,22 +113,6 @@ class GraduationFrame(customtkinter.CTkFrame):
         self.grade_table.configure(fg_color="transparent")
         self.grade_table.pack()
 
-        # combo_default = customtkinter.StringVar(value=coursesDict.get(studentDict.get("ID Curso")))  
-        # self.combobox = customtkinter.CTkComboBox(self.body_frame_label,
-        #                                     values=coursesDict.values(),
-        #                                     # command=self.combobox_callback,
-        #                                     variable=combo_default)
-        # self.combobox.pack(pady=0, anchor="w", side="left", fill=tkinter.BOTH, expand=True)
-        # self.combobox.configure(width=300)
-        
-        # self.refresh_button = customtkinter.CTkButton(self.body_frame_label, 
-        #                                             text="", 
-        #                                             image=self.refresh_image,
-        #                                             anchor="w")
-        #                                             # command = self.refresh_button_callback(self.table_frame))
-        # self.refresh_button.configure(width=25)
-        # self.refresh_button.pack(padx=5, pady=0, side="right")
-        
         self.bottom_frame = customtkinter.CTkFrame(self)
         self.bottom_frame.configure(fg_color="transparent")
         self.bottom_frame.pack()
@@ -144,6 +120,14 @@ class GraduationFrame(customtkinter.CTkFrame):
         self.label_warning = customtkinter.CTkLabel(self.bottom_frame, 
                                                     text="ATENÇÃO: A grade curricular pode estar desatualizada.\nEntre em contato com o desenvolvedor para atualizá-la")
         self.label_warning.pack()
+        
+    def set_value_obr(self, event):
+        if int(self.entry_hour_obr.get()) > 100:
+            hour_obr = int(self.entry_hour_obr.get())
+
+    def set_value_opt(self, event):
+        if int(self.entry_hour_opt.get()) >= 0:
+            hour_opt = int(self.entry_hour_opt.get())
 
         # button to include a curriculum
         # self.button_course = customtkinter.CTkButton(self.bottom_frame, 
@@ -279,9 +263,9 @@ class StudentFrame(customtkinter.CTkFrame):
                                                     command=self.select_pdf_file)
         self.button_student.pack(padx=20, pady=15, anchor="s")
 
-        self.button_help = customtkinter.CTkButton(self.body_frame, 
-                                                    text="onde consigo meu histórico?",
-                                                    command=self.callback)
+        self.button_help = customtkinter.CTkButton(self, 
+                                                text="onde consigo meu histórico?",
+                                                command=self.callback)
         self.button_help.pack(pady=15)
 
     def callback(self):
@@ -487,7 +471,71 @@ class StatisticsFrame(customtkinter.CTkFrame):
         -----------------------------------------------------
 
         '''
+
+class Error(customtkinter.CTk):
+
+    def __init__(self, error):
+
+        super().__init__()
+
+        self.title("graduation progress")
+        self.geometry("600x300")
+
+        self.error_frame = customtkinter.CTkFrame(self)
+        self.error_frame.pack()
+
+        if error == 1:
+            error_msg = "ERRO AO CARREGAR CURSOS"
+            detail_msg = "Verifique se o arquivo 'cursos.csv' está no diretório do programa"
+            self.error_button = customtkinter.CTkButton(self.error_frame, text="OK")
+        elif error == 2:
+            error_msg = "ERRO AO LOCALIZAR ARQUIVO DO CURSO"
+            detail_msg = "Verifique se o arquivo 'cursos.csv' possui o seu curso"
+            self.error_button = customtkinter.CTkButton(self.error_frame, text="OK")
+        elif error == 3:
+            error_msg = "ERRO AO CARREGAR HISTÓRICO DO ALUNO"
+            detail_msg = "Selecione o seu historico de graduação"
+            self.error_button = customtkinter.CTkButton(self.error_frame, 
+                                                    text="OK",
+                                                    command=self.select_pdf_file)
+        elif error == 4:
+            error_msg = "ERRO AO CARREGAR DADOS DO ALUNO"
+            detail_msg = "Selecione o seu historico de graduação"
+            self.error_button = customtkinter.CTkButton(self.error_frame, 
+                                                    text="OK",
+                                                    command=self.select_pdf_file) 
         
+        self.error_label = customtkinter.CTkLabel(self.error_frame, text="ERRO")
+        self.error_label.pack(pady = 15)
+
+        self.error = customtkinter.CTkLabel(self.error_frame, text=error_msg+"\n"+detail_msg)
+        self.error.pack(pady = 30, padx=15)
+
+        self.error_button.pack(pady = 15)
+
+        self.button_help = customtkinter.CTkButton(self.error_frame, 
+                                                    text="onde consigo meu histórico?",
+                                                    command=self.callback)
+        self.button_help.pack(pady=15)
+    
+    def callback(self):
+        webbrowser.open_new(r"https://cobalto.ufpel.edu.br/academico/alunos/historicoAluno")
+
+    def select_pdf_file(self):
+        global studentDict, studentHist, app
+        filename = fd.askopenfilename(
+            title='Escolha o Arquivo',
+            initialdir='/',
+            filetypes=[('PDF files', '*.pdf')]
+        )
+        studentDict = extract_dict(filename)
+        studentHist = load_student_file(filename) 
+        final_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),r"docs/historico_aluno.pdf")
+        shutil.move(filename, final_path)
+        app.destroy()
+        final_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),r"script.py")
+        os.system(final_path)
+
 class App(customtkinter.CTk):
 
     def __init__(self):
@@ -576,6 +624,7 @@ class App(customtkinter.CTk):
         self.select_frame_by_name("statistics")
 
 def load_courses(file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), r"docs/courses_file.csv")):
+    global error
     # courses dictionary
     print("carregando cursos")
     try:
@@ -585,6 +634,7 @@ def load_courses(file_path = os.path.join(os.path.dirname(os.path.realpath(__fil
         return coursesDict
     except:
         pass
+        error = 1
         print("<error> erro ao carregar cursos")
 
 def save_curriculum(target):
@@ -639,6 +689,7 @@ def save_curriculum(target):
         writer.writerow(curriculumList)
     
 def load_curriculum(course_id , file_path = r'C:\Users\arthu\Desktop\graduation_progress\docs\cursos'):
+    global error
     print("carregando grade curricular do curso")
 
     file_path = os.path.join(file_path, course_id+".csv")
@@ -647,6 +698,7 @@ def load_curriculum(course_id , file_path = r'C:\Users\arthu\Desktop\graduation_
         dfCurriculum = pd.read_csv(file_path, encoding='latin-1')
         return dfCurriculum
     else:
+        error = 2
         print("<error> erro ao localizar arquivo")
         print("<error> curso nao suportado")
 
@@ -673,10 +725,10 @@ def extract_disciplines(target):
                 var = " TRC "
             if ' CANC ' in disc:
                 var = " CANC "
-            if ' REP ' in disc:
-                var = " REP "
-            if ' INF ' in disc:
-                var = " INF "
+            if ' REPR ' in disc:
+                var = " REPR "
+            if ' INFR ' in disc:
+                var = " INFR "
             if med == 'MAT':
                 med = ''
                 cred = ''
@@ -692,6 +744,7 @@ def extract_disciplines(target):
     return disciplines
 
 def load_student_file(file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), r"docs/historico_aluno.pdf")):
+    global error
     print('carregando historico do aluno')    
     try:
         reader = PdfReader(file_path)
@@ -704,6 +757,7 @@ def load_student_file(file_path = os.path.join(os.path.dirname(os.path.realpath(
         return df
     except:
         pass
+        error = 3
         print("<error> erro ao carregar historico do aluno")
     
 def extract_target(target, file, delimiter="\n"):
@@ -718,7 +772,7 @@ def extract_target(target, file, delimiter="\n"):
         pass
 
 def extract_dict(file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), r"docs/historico_aluno.pdf")):
-    global logged
+    global logged, error
     print('carregando dados do aluno')    
     try:
         target = PdfReader(file_path)
@@ -736,9 +790,12 @@ def extract_dict(file_path = os.path.join(os.path.dirname(os.path.realpath(__fil
     except:
         pass
         logged = False
+        error = 4
         print("<error> erro ao carregar dados do aluno")
         
 if __name__=='__main__':
+
+    error = 0
 
     credit = 17
     hour_obr = 3196
@@ -752,6 +809,10 @@ if __name__=='__main__':
     if logged:
         dfCurriculum = load_curriculum(studentDict.get("ID Curso"))
 
-    app = App()
+    if error > 0:
+        app = Error(error)
+    else:
+        app = App()
+    
     app.mainloop()
     
