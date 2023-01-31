@@ -439,33 +439,33 @@ class StatisticsFrame(customtkinter.CTkFrame):
         fig.patch.set_facecolor('#404040')
         ax = fig.add_subplot()
         tot_graph = df_graph.plot.pie(y='total', subplots=True, ax=ax, legend=False, autopct='%1.1f%%', 
-            explode=(0, 0.1), shadow=True, startangle=0, labels=None
+            explode=(0, 0.1), shadow=True, startangle=0, labels=None, colors=['red','green']
         )
         canvas_tot = FigureCanvasTkAgg(fig, self.left_graph_frame)
         canvas_tot.draw()
-        canvas_tot.get_tk_widget().pack(side='left', ipadx=10, ipady=10)
+        canvas_tot.get_tk_widget().pack(side='left', ipadx=20, ipady=10)
 
         # second graph
         fig = Figure(figsize=fig_size, dpi=100)
         fig.patch.set_facecolor('#404040')
         ax = fig.add_subplot()
         obr_graph = df_graph.plot.pie(y='obrigatória', subplots=True, ax=ax, legend=False, autopct='%1.1f%%', 
-            explode=(0, 0.1), shadow=True, startangle=0, labels=None
+            explode=(0, 0.1), shadow=True, startangle=0, labels=None, colors=['red','green']
         )
         canvas_obr = FigureCanvasTkAgg(fig, self.mid_graph_frame)
         canvas_obr.draw()
-        canvas_obr.get_tk_widget().pack(side='left', ipadx=10, ipady=10)
+        canvas_obr.get_tk_widget().pack(side='left', ipadx=20, ipady=10)
 
         # third graph 
         fig = Figure(figsize=fig_size, dpi=100)
         fig.patch.set_facecolor('#404040')
         ax = fig.add_subplot()
         opt_graph = df_graph.plot.pie(y='optativa', subplots=True, ax=ax, legend=True, autopct='%1.1f%%', 
-            explode=(0, 0.1), shadow=True, startangle=0
+            explode=(0, 0.1), shadow=True, startangle=0, labels=None, colors=['red','green']
         )
         canvas_opt = FigureCanvasTkAgg(fig, self.right_graph_frame)
         canvas_opt.draw()
-        canvas_opt.get_tk_widget().pack(side='left', ipadx=10, ipady=10)
+        canvas_opt.get_tk_widget().pack(side='left', ipadx=20, ipady=10)
 
         # create third frame
         self.body_frame = customtkinter.CTkFrame(self)
